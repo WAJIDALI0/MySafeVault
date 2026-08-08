@@ -1,0 +1,32 @@
+PrismaClientKnownRequestError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$lib$2f$prisma$2f$client$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].vaultItem.create()` invocation in
+E:\MERN INTERN EmbRadar\finalProject\MySafeVault\apps\web\.next\server\chunks\ssr\[root of the server]__90b876._.js:1947:186
+
+  1944 // Stringify and encrypt the sensitive data payload
+  1945 const plaintext = JSON.stringify(data);
+  1946 const encryptedData = (0, __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$lib$2f$encryption$2f$index$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["encryptData"])(plaintext);
+→ 1947 const newItem = await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$lib$2f$prisma$2f$client$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].vaultItem.create(
+Foreign key constraint violated on the constraint: `vault_items_profile_id_fkey`
+    at ei.handleRequestError (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\@prisma+client@6.19.3_prism_1d040ab5215f59f0e27ddee7f0cf082e\node_modules\@prisma\client\runtime\library.js:121:7268)
+    at ei.handleAndLogRequestError (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\@prisma+client@6.19.3_prism_1d040ab5215f59f0e27ddee7f0cf082e\node_modules\@prisma\client\runtime\library.js:121:6593)
+    at ei.request (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\@prisma+client@6.19.3_prism_1d040ab5215f59f0e27ddee7f0cf082e\node_modules\@prisma\client\runtime\library.js:121:6300)
+    at async a (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\@prisma+client@6.19.3_prism_1d040ab5215f59f0e27ddee7f0cf082e\node_modules\@prisma\client\runtime\library.js:130:9551)
+    at async addVaultItem (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\apps\web\.next\server\chunks\ssr\[root of the server]__90b876._.js:1947:25)
+    at async E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:157:2088
+    at async handleAction (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:156:20859)
+    at async renderToHTMLOrFlightImpl (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:161:17838)
+    at async doRender (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\base-server.js:1587:34)
+    at async responseGenerator (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\base-server.js:1834:28)
+    at async DevServer.renderToResponseWithComponentsImpl (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\base-server.js:1878:28)
+    at async DevServer.renderPageComponent (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\base-server.js:2292:24)
+    at async DevServer.renderToResponseImpl (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\base-server.js:2330:32)
+    at async DevServer.pipeImpl (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\base-server.js:984:25)
+    at async NextNodeServer.handleCatchallRenderRequest (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\next-server.js:281:17)
+    at async DevServer.handleRequestImpl (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\base-server.js:877:17)
+    at async E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\dev\next-dev-server.js:373:20
+    at async Span.traceAsyncFn (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\dev\next-dev-server.js:370:24)
+    at async invokeRender (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\lib\router-server.js:183:21)
+    at async handleRequest (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\lib\router-server.js:360:24)
+    at async requestHandlerImpl (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\lib\router-server.js:384:13)
+    at async Server.requestListener (E:\MERN INTERN EmbRadar\finalProject\MySafeVault\node_modules\.pnpm\next@15.0.0_react-dom@19.0.0_react@19.0.0__react@19.0.0\node_modules\next\dist\server\lib\start-server.js:142:13)

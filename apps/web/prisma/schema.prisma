@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profile {
+  id         String   @id @db.Uuid // Must map to Supabase auth.users.id
+  full_name  String?
+  avatar     String?
+  timezone   String?  @default("UTC")
+  language   String?  @default("en")
+  theme      String?  @default("system")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  preferences UserPreference?
+  logs        ActivityLog[]
+  vault_items VaultItem[]
+
+  @@map("profiles")
+}
+
+enum VaultItemType {
+  PASSWORD
+  DOCUMENT
+  SECURE_NOTE
+  IDENTITY
+  RECEIPT
+  WARRANTY
+}
+
+model VaultItem {
+  id            String        @id @default(uuid()) @db.Uuid
+  profile_id    String        @db.Uuid
+  type          VaultItemType
+  title         String
+  description   String?
+  is_favorite   Boolean       @default(false)
+  encrypted_data String       @db.Text
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+
+  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@map("vault_items")
+}
+
+model UserPreference {
+  id                    String   @id @default(uuid()) @db.Uuid
+  profile_id            String   @unique @db.Uuid
+  notification_settings Json     @default("{}")
+  security_settings     Json     @default("{}")
+  appearance            Json     @default("{}")
+  storage_settings      Json     @default("{}")
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  profile_id String   @db.Uuid
+  action     String   // login, logout, password_changed, profile_updated, email_changed
+  metadata   Json     @default("{}")
+  created_at DateTime @default(now())
+
+  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@map("activity_logs")
+}
