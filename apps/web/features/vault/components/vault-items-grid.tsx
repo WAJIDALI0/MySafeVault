@@ -1,23 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { KeyRound, FileText, Shield, Star } from "lucide-react";
+import { useState, useTransition } from "react";
+import { KeyRound, FileText, Shield, Star, Loader2 } from "lucide-react";
 import { ViewVaultItemDialog } from "./view-vault-item-dialog";
+import { toggleFavorite } from "../actions/vault.actions";
 
 interface VaultItemsGridProps {
   items: any[];
+  optimisticFavorites: Record<string, boolean>;
+  setOptimisticFavorites: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 }
 
-export function VaultItemsGrid({ items }: VaultItemsGridProps) {
+export function VaultItemsGrid({ items, optimisticFavorites, setOptimisticFavorites }: VaultItemsGridProps) {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [selectedItemTitle, setSelectedItemTitle] = useState("");
-  const [selectedItemType, setSelectedItemType] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const selectedItem = items.find(i => i.id === selectedItemId);
+
+  const handleFavoriteToggle = (e: React.MouseEvent, id: string, currentStatus: boolean) => {
+    e.stopPropagation();
+    const isFav = optimisticFavorites[id] ?? currentStatus;
+    const nextStatus = !isFav;
+    
+    // Instantly update UI
+    setOptimisticFavorites(prev => ({ ...prev, [id]: nextStatus }));
+    
+    startTransition(async () => {
+      await toggleFavorite(id, nextStatus);
+    });
+  };
 
   const handleItemClick = (item: any) => {
     setSelectedItemId(item.id);
-    setSelectedItemTitle(item.title);
-    setSelectedItemType(item.type);
     setIsDialogOpen(true);
   };
 
@@ -42,7 +57,13 @@ export function VaultItemsGrid({ items }: VaultItemsGridProps) {
                   <p className="text-xs text-slate-500 capitalize">{item.type.toLowerCase()}</p>
                 </div>
               </div>
-              {item.is_favorite && <Star className="w-4 h-4 text-rose-500 fill-rose-500/20" />}
+              <button 
+                onClick={(e) => handleFavoriteToggle(e, item.id, item.is_favorite)}
+                disabled={isPending}
+                className="p-1.5 rounded-md hover:bg-slate-800 transition-colors"
+              >
+                <Star className={`w-4 h-4 transition-colors ${(optimisticFavorites[item.id] ?? item.is_favorite) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600 hover:text-yellow-400'}`} />
+              </button>
             </div>
             <div className="mt-auto text-[11px] text-slate-500">
               Updated {new Date(item.updated_at).toLocaleDateString()}
@@ -51,13 +72,20 @@ export function VaultItemsGrid({ items }: VaultItemsGridProps) {
         ))}
       </div>
 
-      <ViewVaultItemDialog 
-        itemId={selectedItemId!}
-        itemTitle={selectedItemTitle}
-        itemType={selectedItemType}
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-      />
+      {selectedItem && (
+        <ViewVaultItemDialog 
+          itemId={selectedItem.id}
+          itemTitle={selectedItem.title}
+          itemType={selectedItem.type}
+          itemIsFavorite={optimisticFavorites[selectedItem.id] ?? selectedItem.is_favorite}
+          itemDescription={selectedItem.description || ""}
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) setTimeout(() => setSelectedItemId(null), 300); // clear after animation
+          }}
+        />
+      )}
     </>
   );
 }

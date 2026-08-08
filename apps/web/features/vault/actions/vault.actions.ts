@@ -167,3 +167,92 @@ export async function updateVaultItem(id: string, params: AddVaultItemParams) {
     return { error: "Failed to update item securely." };
   }
 }
+
+export async function toggleFavorite(id: string, is_favorite: boolean) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Unauthorized" };
+
+  try {
+    await prisma.vaultItem.updateMany({
+      where: { 
+        id,
+        profile_id: user.id
+      },
+      data: {
+        is_favorite
+      }
+    });
+
+    // We intentionally don't log a full ActivityLog for a simple favorite toggle to avoid spam,
+    // or we could log it if needed. Let's log it as requested by DAY 5 Part 5 if it's true.
+    if (is_favorite) {
+      await prisma.activityLog.create({
+        data: { profile_id: user.id, action: "item_favorited", metadata: { itemId: id } },
+      });
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/vault");
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to toggle favorite:", error);
+    return { error: "Failed to update favorite status." };
+  }
+}
+
+export async function getStorageStats() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Unauthorized" };
+
+  try {
+    const items = await prisma.vaultItem.findMany({
+      where: { profile_id: user.id },
+      select: { type: true, encrypted_data: true }
+    });
+
+    let totalBytes = 0;
+    const categories = {
+      Documents: 0,
+      Images: 0,
+      Notes: 0,
+      Passwords: 0,
+      Other: 0
+    };
+
+    for (const item of items) {
+      const bytes = Buffer.byteLength(item.encrypted_data, 'utf8');
+      totalBytes += bytes;
+
+      switch (item.type) {
+        case "DOCUMENT":
+          // To strictly separate Images vs Documents we would need to decrypt and check file type.
+          // For efficiency in a metadata stats call, we classify DOCUMENT as Documents.
+          categories.Documents += bytes;
+          break;
+        case "SECURE_NOTE":
+          categories.Notes += bytes;
+          break;
+        case "PASSWORD":
+          categories.Passwords += bytes;
+          break;
+        default:
+          categories.Other += bytes;
+          break;
+      }
+    }
+
+    return { 
+      success: true, 
+      totalBytes, 
+      categories 
+    };
+  } catch (error) {
+    console.error("Failed to get storage stats:", error);
+    return { error: "Failed to calculate storage stats." };
+  }
+}

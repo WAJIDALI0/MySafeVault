@@ -1,4 +1,4 @@
-import { Fingerprint, FileText, KeyRound, StickyNote, LogIn, LogOut, Shield } from "lucide-react";
+import { Fingerprint, FileText, KeyRound, StickyNote, LogIn, LogOut, Shield, Pencil, Trash } from "lucide-react";
 import { getRecentActivity } from "../../actions/dashboard.actions";
 
 function formatTimeAgo(dateString: string | Date) {
@@ -13,19 +13,35 @@ function formatTimeAgo(dateString: string | Date) {
 }
 
 function getActivityConfig(action: string, metadata: any = {}) {
+  const noun = metadata?.title || metadata?.itemId || "Item";
+
   switch (action) {
     case "login":
       return { verb: "Logged", noun: "In", type: "Security", icon: LogIn, color: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20" };
     case "logout":
       return { verb: "Logged", noun: "Out", type: "Security", icon: LogOut, color: "text-slate-500", bg: "bg-slate-500/10", border: "border-slate-500/20" };
-    case "password_changed":
-      return { verb: "Changed", noun: "Password", type: "Security", icon: Shield, color: "text-[#f59e0b]", bg: "bg-[#f59e0b]/10", border: "border-[#f59e0b]/20" };
+    
+    // Creates
     case "create_password":
-      return { verb: "Added", noun: metadata?.title || "Password", type: "Password", icon: KeyRound, color: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]/10", border: "border-[#8b5cf6]/20" };
+      return { verb: "Added", noun, type: "Password", icon: KeyRound, color: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]/10", border: "border-[#8b5cf6]/20" };
     case "create_document":
-      return { verb: "Uploaded", noun: metadata?.title || "Document", type: "Document", icon: FileText, color: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10", border: "border-[#3b82f6]/20" };
-    case "create_note":
-      return { verb: "Added", noun: metadata?.title || "Note", type: "Note", icon: StickyNote, color: "text-[#f59e0b]", bg: "bg-[#f59e0b]/10", border: "border-[#f59e0b]/20" };
+      return { verb: "Uploaded", noun, type: "Document", icon: FileText, color: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10", border: "border-[#3b82f6]/20" };
+    case "create_secure_note":
+      return { verb: "Added", noun, type: "Note", icon: StickyNote, color: "text-[#f59e0b]", bg: "bg-[#f59e0b]/10", border: "border-[#f59e0b]/20" };
+    case "create_identity":
+      return { verb: "Added", noun, type: "Identity", icon: Fingerprint, color: "text-[#ec4899]", bg: "bg-[#ec4899]/10", border: "border-[#ec4899]/20" };
+    case "create_receipt":
+    case "create_warranty":
+      return { verb: "Saved", noun, type: "Record", icon: FileText, color: "text-[#14b8a6]", bg: "bg-[#14b8a6]/10", border: "border-[#14b8a6]/20" };
+      
+    // CRUD
+    case "update_item":
+      return { verb: "Updated", noun, type: "Edit", icon: Pencil, color: "text-[#3b82f6]", bg: "bg-[#3b82f6]/10", border: "border-[#3b82f6]/20" }; 
+    case "delete_item":
+      return { verb: "Deleted", noun: "an item", type: "Delete", icon: Trash, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" };
+    case "view_item":
+      return { verb: "Viewed", noun, type: "Access", icon: Shield, color: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]/10", border: "border-[#8b5cf6]/20" };
+
     default:
       return { verb: "Performed", noun: action, type: "Action", icon: Fingerprint, color: "text-slate-400", bg: "bg-slate-800/50", border: "border-slate-700" };
   }
