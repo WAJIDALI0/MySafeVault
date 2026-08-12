@@ -21,6 +21,7 @@ model Profile {
   preferences UserPreference?
   logs        ActivityLog[]
   vault_items VaultItem[]
+  notifications Notification[]
 
   @@map("profiles")
 }
@@ -41,6 +42,9 @@ model VaultItem {
   title         String
   description   String?
   is_favorite   Boolean       @default(false)
+  /// SECURITY: Only non-sensitive data (e.g. expiration dates, file sizes, tags, password strength metrics) is allowed here.
+  /// FORBIDDEN: passwords, hashes, secure note contents, identities, documents, keys, tokens, or any sensitive plaintext.
+  metadata      Json?         @default("{}")
   encrypted_data String       @db.Text
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
@@ -77,4 +81,22 @@ model ActivityLog {
 
   @@index([profile_id])
   @@map("activity_logs")
+}
+
+model Notification {
+  id         String    @id @default(uuid()) @db.Uuid
+  profile_id String    @db.Uuid
+  type       String    // e.g. "SECURITY", "EXPIRATION", "SYSTEM"
+  title      String
+  message    String
+  is_read    Boolean   @default(false)
+  action_url String?
+  metadata   Json      @default("{}")
+  created_at DateTime  @default(now())
+  read_at    DateTime?
+
+  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id, is_read])
+  @@map("notifications")
 }

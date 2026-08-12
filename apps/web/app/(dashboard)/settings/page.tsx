@@ -1,1 +1,5 @@
-export default function settingsPage() { return <div className='p-8 font-outfit font-bold text-2xl dark:text-white capitalize'>settings Placeholder</div>; }
+import { redirect } from 'next/navigation';
+
+export default function SettingsPage() {
+  redirect('/settings/account');
+}

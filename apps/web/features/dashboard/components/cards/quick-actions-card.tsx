@@ -1,9 +1,9 @@
 "use client";
 
 import { KeyRound, FileText, StickyNote, Fingerprint, Receipt, ShieldCheck, ArrowRight } from "lucide-react";
-
 import { AddVaultItemDialog } from "../../../vault/components/add-vault-item-dialog";
 import { VaultItemType } from "@prisma/client";
+import Link from "next/link";
 
 const actions = [
   { label: "Add Password", icon: KeyRound, color: "text-[#8b5cf6]", bg: "bg-[#8b5cf6]/10", border: "border-[#8b5cf6]/20", type: "PASSWORD" as VaultItemType },
@@ -34,9 +34,9 @@ export function QuickActionsCard() {
         ))}
       </div>
 
-      <button className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#10b981] hover:text-white bg-[#10b981]/5 hover:bg-[#10b981]/10 border border-[#10b981]/20 py-2.5 rounded-lg transition-colors mt-auto">
+      <Link href="/vault" className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#10b981] hover:text-white bg-[#10b981]/5 hover:bg-[#10b981]/10 border border-[#10b981]/20 py-2.5 rounded-lg transition-colors mt-auto">
         View All Actions <ArrowRight className="w-4 h-4" />
-      </button>
+      </Link>
     </div>
   );
 }

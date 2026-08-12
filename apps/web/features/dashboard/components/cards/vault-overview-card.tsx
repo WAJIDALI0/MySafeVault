@@ -1,16 +1,18 @@
 import { FolderOpen, KeyRound, FileText, FileLock2, Star, TrendingUp, ChevronDown, Shield } from "lucide-react";
-import { getDashboardCounts } from "../../actions/dashboard.actions";
+import { getDashboardStats } from "../../services/dashboard.service";
+import Link from "next/link";
 
-export async function VaultOverviewCard() {
-  const countsResponse = await getDashboardCounts();
-  const data = countsResponse.data || { totalItems: 0, passwords: 0, documents: 0, secureNotes: 0, favorites: 0 };
+export async function VaultOverviewCard({ userId }: { userId: string }) {
+  const data = await getDashboardStats(userId);
+
+  const trendLabel = data.trend === 0 ? "No change" : (data.trend > 0 ? `+${data.trend} this week` : `${data.trend} this week`);
 
   const stats = [
-    { label: "Total Items", value: data.totalItems.toString(), icon: FolderOpen, color: "text-slate-400", bg: "bg-slate-800/50", trend: "+0 this week" },
-    { label: "Passwords", value: data.passwords.toString(), icon: KeyRound, color: "text-purple-500", bg: "bg-purple-500/10", trend: "+0 this week" },
-    { label: "Documents", value: data.documents.toString(), icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10", trend: "+0 this week" },
-    { label: "Secure Notes", value: data.secureNotes.toString(), icon: FileLock2, color: "text-amber-500", bg: "bg-amber-500/10", trend: "+0 this week" },
-    { label: "Favorites", value: data.favorites.toString(), icon: Star, color: "text-rose-500", bg: "bg-rose-500/10", trend: "+0 this week" },
+    { label: "Total Items", value: data.totalItems.toString(), icon: FolderOpen, color: "text-slate-400", bg: "bg-slate-800/50", trend: trendLabel, href: "/vault" },
+    { label: "Passwords", value: data.passwords.toString(), icon: KeyRound, color: "text-purple-500", bg: "bg-purple-500/10", trend: trendLabel, href: "/vault?category=PASSWORD" },
+    { label: "Documents", value: data.documents.toString(), icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10", trend: trendLabel, href: "/vault?category=DOCUMENT" },
+    { label: "Secure Notes", value: data.secureNotes.toString(), icon: FileLock2, color: "text-amber-500", bg: "bg-amber-500/10", trend: trendLabel, href: "/vault?category=SECURE_NOTE" },
+    { label: "Favorites", value: data.favorites.toString(), icon: Star, color: "text-rose-500", bg: "bg-rose-500/10", trend: trendLabel, href: "/vault?favorites=true" },
   ];
 
   return (
@@ -32,13 +34,13 @@ export async function VaultOverviewCard() {
       
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-[#111827] border border-slate-800/50 rounded-lg p-4 flex flex-col justify-between hover:border-slate-700 transition-colors cursor-default">
+          <Link key={i} href={stat.href} className="bg-[#111827] border border-slate-800/50 rounded-lg p-4 flex flex-col justify-between hover:border-[#10b981]/50 hover:bg-slate-800/30 transition-colors cursor-pointer group outline-none focus:ring-2 focus:ring-[#10b981]/50 focus:ring-offset-1 focus:ring-offset-[#111827]">
             
             <div className="flex items-center gap-2 mb-3">
-              <div className={`p-1.5 rounded-md ${stat.bg} ${stat.color}`}>
+              <div className={`p-1.5 rounded-md ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
                 <stat.icon className="w-3.5 h-3.5" />
               </div>
-              <span className="text-xs font-medium text-slate-400">{stat.label}</span>
+              <span className="text-xs font-medium text-slate-400 group-hover:text-slate-300">{stat.label}</span>
             </div>
             
             <div>
@@ -51,7 +53,7 @@ export async function VaultOverviewCard() {
               </div>
             </div>
             
-          </div>
+          </Link>
         ))}
       </div>
       

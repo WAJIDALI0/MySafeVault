@@ -6,6 +6,7 @@ import { encryptData, decryptData } from "@/lib/encryption";
 import { revalidatePath } from "next/cache";
 import { VaultItemType } from "@prisma/client";
 import * as fs from "fs";
+import { createNotification } from "@/lib/services/notification.service";
 
 interface AddVaultItemParams {
   type: VaultItemType;
@@ -51,6 +52,15 @@ export async function addVaultItem({ type, title, description, data }: AddVaultI
         action: `create_${type.toLowerCase()}`,
         metadata: { title },
       },
+    });
+
+    // Send a notification
+    await createNotification({
+      profile_id: user.id,
+      type: "ACTIVITY",
+      title: "New Vault Item Added",
+      message: `You successfully added a new ${type.toLowerCase()} item: "${title}".`,
+      action_url: `/vault?category=${type}`
     });
 
     revalidatePath("/dashboard");

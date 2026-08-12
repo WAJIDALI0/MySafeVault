@@ -278,9 +278,8 @@ export function ViewVaultItemDialog({ itemId, itemTitle, itemType, itemIsFavorit
               <>
                 <Button 
                   variant="ghost" 
-                  size="sm" 
                   onClick={() => setDeleteConfirm(true)}
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 px-3 text-sm"
                 >
                   <Trash2 className="w-4 h-4 mr-2" /> Delete
                 </Button>
@@ -294,7 +293,7 @@ export function ViewVaultItemDialog({ itemId, itemTitle, itemType, itemIsFavorit
                     if (!isOpen) onOpenChange(false); // close viewer when edit closes
                   }}
                 >
-                  <Button size="sm" className="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700" onClick={() => setIsEditOpen(true)}>
+                  <Button className="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 h-8 px-3 text-sm" onClick={() => setIsEditOpen(true)}>
                     <Pencil className="w-4 h-4 mr-2" /> Edit Item
                   </Button>
                 </AddVaultItemDialog>

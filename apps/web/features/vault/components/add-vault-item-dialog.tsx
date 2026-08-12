@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,8 +35,9 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
   const [error, setError] = useState<string | null>(null);
 
   // Base State
+  const resolvedDefaultType = defaultType || "PASSWORD";
   const [title, setTitle] = useState(initialData?.title || "");
-  const [type, setType] = useState<VaultItemType>(initialData?.type || defaultType);
+  const [type, setType] = useState<VaultItemType>(initialData?.type || resolvedDefaultType);
   const [description, setDescription] = useState(initialData?.description || "");
 
   // Dynamic Fields State
@@ -95,7 +96,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
       // Sync state with initialData when opened in edit mode
       if (editMode && initialData) {
         setTitle(initialData.title || "");
-        setType(initialData.type || defaultType);
+        setType(initialData.type || resolvedDefaultType);
         setDescription(initialData.description || "");
         setUsername(initialData.username || "");
         setPassword(initialData.password || "");
@@ -111,10 +112,39 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
         setFileName(initialData.fileName || null);
         setFileSize(initialData.fileSize || null);
       } else {
-        setType(defaultType);
+        setType(resolvedDefaultType);
       }
     }
   };
+
+  useEffect(() => {
+    if (controlledOpen !== undefined) {
+      if (controlledOpen) {
+        if (editMode && initialData) {
+          setTitle(initialData.title || "");
+          setType(initialData.type || resolvedDefaultType);
+          setDescription(initialData.description || "");
+          setUsername(initialData.username || "");
+          setPassword(initialData.password || "");
+          setUrl(initialData.url || "");
+          setTags(initialData.tags || "");
+          setCategory(initialData.category || "");
+          setFullName(initialData.fullName || "");
+          setIdNumber(initialData.idNumber || "");
+          setAmount(initialData.amount || "");
+          setPurchaseDate(initialData.purchaseDate || "");
+          setExpiryDate(initialData.expiryDate || "");
+          setFileBase64(initialData.fileBase64 || null);
+          setFileName(initialData.fileName || null);
+          setFileSize(initialData.fileSize || null);
+        } else {
+          setType(resolvedDefaultType);
+        }
+      } else {
+        resetForm();
+      }
+    }
+  }, [controlledOpen, resolvedDefaultType, editMode, initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,6 +187,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
         if (result?.error) {
           setError(result.error);
         } else {
+          window.dispatchEvent(new Event("refresh-notifications"));
           setOpen(false);
           if (!editMode) resetForm();
         }

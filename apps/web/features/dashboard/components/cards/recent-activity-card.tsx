@@ -1,16 +1,8 @@
 import { Fingerprint, FileText, KeyRound, StickyNote, LogIn, LogOut, Shield, Pencil, Trash } from "lucide-react";
 import { getRecentActivity } from "../../actions/dashboard.actions";
+import Link from "next/link";
 
-function formatTimeAgo(dateString: string | Date) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return `${diffInSeconds} secs ago`;
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  return `${Math.floor(diffInSeconds / 86400)} days ago`;
-}
+import { formatDistanceToNow } from "date-fns";
 
 function getActivityConfig(action: string, metadata: any = {}) {
   const noun = metadata?.title || metadata?.itemId || "Item";
@@ -47,17 +39,22 @@ function getActivityConfig(action: string, metadata: any = {}) {
   }
 }
 
-export async function RecentActivityCard() {
-  const activityResponse = await getRecentActivity();
-  const logs = activityResponse.data || [];
+import { prisma } from "@/lib/prisma/client";
+
+export async function RecentActivityCard({ userId }: { userId: string }) {
+  const logs = await prisma.activityLog.findMany({
+    where: { profile_id: userId },
+    orderBy: { created_at: 'desc' },
+    take: 5,
+  });
 
   return (
     <div className="bg-[#0b1120] border border-slate-800 rounded-xl p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-medium text-white">Recent Activity</h3>
-        <button className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+        <Link href="/activity" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
           View all
-        </button>
+        </Link>
       </div>
 
       <div className="space-y-5 flex-1">
@@ -77,7 +74,7 @@ export async function RecentActivityCard() {
                     <p className="text-sm font-medium text-white">
                       {config.verb} <span className="font-normal text-slate-400">{config.noun}</span>
                     </p>
-                    <p className="text-xs text-slate-500 mt-0.5">{formatTimeAgo(log.created_at)}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}</p>
                   </div>
                 </div>
                 <div>

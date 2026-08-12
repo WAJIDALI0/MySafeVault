@@ -11,6 +11,7 @@ import {
   ResetPasswordSchema 
 } from "../schemas/auth.schema";
 import { logActivity } from "@/lib/logger/activity";
+import { createNotification } from "@/lib/services/notification.service";
 
 export async function login(formData: z.infer<typeof LoginSchema>) {
   const supabase = await createClient();
@@ -34,6 +35,14 @@ export async function login(formData: z.infer<typeof LoginSchema>) {
       profileId: data.user.id,
       action: "login",
       metadata: { method: "email" }
+    });
+    
+    await createNotification({
+      profile_id: data.user.id,
+      type: "SECURITY",
+      title: "New Login Detected",
+      message: "A new login to your MySafeVault account was successful.",
+      action_url: "/activity"
     });
   }
 
@@ -109,9 +118,51 @@ export async function resetPassword(formData: z.infer<typeof ResetPasswordSchema
       profileId: data.user.id,
       action: "password_changed",
     });
+
+    await createNotification({
+      profile_id: data.user.id,
+      type: "SECURITY",
+      title: "Master Password Changed",
+      message: "Your master password was successfully updated via password reset.",
+      action_url: "/settings/security"
+    });
   }
 
   redirect("/password-updated");
+}
+
+export async function changePassword(formData: z.infer<typeof ResetPasswordSchema>) {
+  const supabase = await createClient();
+  const parsed = ResetPasswordSchema.safeParse(formData);
+
+  if (!parsed.success) {
+    return { error: "Invalid form data" };
+  }
+
+  const { data, error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  if (data.user) {
+    await logActivity({
+      profileId: data.user.id,
+      action: "password_changed",
+    });
+
+    await createNotification({
+      profile_id: data.user.id,
+      type: "SECURITY",
+      title: "Master Password Changed",
+      message: "Your master password was successfully updated.",
+      action_url: "/settings/security"
+    });
+  }
+
+  return { success: true };
 }
 
 export async function logout() {

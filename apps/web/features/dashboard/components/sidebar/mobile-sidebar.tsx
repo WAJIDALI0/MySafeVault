@@ -41,22 +41,58 @@ export function MobileSidebar({ mainNavItems, secondaryNavItems, pathname }: Mob
             
             <div className="flex-1 overflow-y-auto py-4 px-3 space-y-8">
               <div className="space-y-1">
-                {mainNavItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium",
-                      pathname === item.href || pathname.startsWith(`${item.href}/`)
-                        ? "bg-[#10B981]/10 text-[#10B981]"
-                        : "text-slate-600 dark:text-slate-400"
-                    )}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {item.name}
-                  </Link>
-                ))}
+                {mainNavItems.map((item) => {
+                  const url = new URL(`http://localhost${item.href}`);
+                  const itemPath = url.pathname;
+                  const itemCategory = url.searchParams.get("category");
+                  
+                  const isPathMatch = pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+                  const isCategoryMatch = itemCategory ? (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("category") === itemCategory) : !(typeof window !== "undefined" && new URLSearchParams(window.location.search).has("category"));
+                  
+                  const isActive = isPathMatch && (itemPath === "/vault" ? isCategoryMatch : true);
+
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium",
+                        isActive
+                          ? "bg-[#10B981]/10 text-[#10B981]"
+                          : "text-slate-600 dark:text-slate-400"
+                      )}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-1">
+                <div className="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  System
+                </div>
+                {secondaryNavItems.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium",
+                        isActive
+                          ? "bg-[#10B981]/10 text-[#10B981]"
+                          : "text-slate-600 dark:text-slate-400"
+                      )}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -16,14 +16,34 @@ export function VaultPageClient({ initialItems }: VaultPageClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const categoryParam = searchParams.get("category");
+  const actionParam = searchParams.get("action");
+  const typeParam = searchParams.get("type");
+  
   const [currentCategory, setCurrentCategory] = useState(categoryParam || "ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [optimisticFavorites, setOptimisticFavorites] = useState<Record<string, boolean>>({});
+  
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const isValidCategory = categoryParam && categoryParam !== "ALL" && categoryParam !== "FAVORITES";
+  const [addType, setAddType] = useState(isValidCategory ? categoryParam : "PASSWORD");
 
   // Sync state if URL changes
   useEffect(() => {
     setCurrentCategory(categoryParam || "ALL");
-  }, [categoryParam]);
+    
+    if (actionParam === "new") {
+      setIsAddOpen(true);
+      if (typeParam) {
+        setAddType(typeParam);
+      }
+      
+      // Remove query params to avoid re-triggering on reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete("action");
+      url.searchParams.delete("type");
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [categoryParam, actionParam, typeParam]);
 
   const handleCategoryChange = (catId: string) => {
     setCurrentCategory(catId);
@@ -81,8 +101,12 @@ export function VaultPageClient({ initialItems }: VaultPageClientProps) {
               className="pl-9 bg-[#0b1120] border-slate-800 text-sm focus-visible:ring-[#10b981]"
             />
           </div>
-          <AddVaultItemDialog defaultType={currentCategory !== "ALL" && currentCategory !== "FAVORITES" ? currentCategory as any : "PASSWORD"}>
-            <Button className="bg-[#10b981] hover:bg-[#059669] text-white shrink-0">
+          <AddVaultItemDialog 
+            open={isAddOpen} 
+            onOpenChange={setIsAddOpen} 
+            defaultType={addType as any}
+          >
+            <Button onClick={() => { setIsAddOpen(true); setAddType((currentCategory && currentCategory !== "ALL" && currentCategory !== "FAVORITES") ? currentCategory : "PASSWORD"); }} className="bg-[#10b981] hover:bg-[#059669] text-white shrink-0">
               <Plus className="w-4 h-4 mr-2" /> Add Item
             </Button>
           </AddVaultItemDialog>
@@ -125,8 +149,12 @@ export function VaultPageClient({ initialItems }: VaultPageClientProps) {
                   : "You haven't added any items to this category yet."}
               </p>
               {!searchQuery && (
-                <AddVaultItemDialog defaultType={currentCategory !== "ALL" && currentCategory !== "FAVORITES" ? currentCategory as any : "PASSWORD"}>
-                  <Button className="bg-[#10b981] hover:bg-[#059669] text-white">
+                <AddVaultItemDialog 
+                  open={isAddOpen} 
+                  onOpenChange={setIsAddOpen} 
+                  defaultType={addType as any}
+                >
+                  <Button onClick={() => { setIsAddOpen(true); setAddType((currentCategory && currentCategory !== "ALL" && currentCategory !== "FAVORITES") ? currentCategory : "PASSWORD"); }} className="bg-[#10b981] hover:bg-[#059669] text-white">
                     <Plus className="w-4 h-4 mr-2" /> Add your first item
                   </Button>
                 </AddVaultItemDialog>

@@ -1,4 +1,6 @@
-import { getStorageStats } from "@/features/vault/actions/vault.actions";
+// Cache bust: 1
+import { prisma } from "@/lib/prisma/client";
+import Link from "next/link";
 
 function formatBytes(bytes: number) {
   if (bytes === 0) return '0 B';
@@ -8,10 +10,27 @@ function formatBytes(bytes: number) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-export async function StorageCard() {
-  const result = await getStorageStats();
-  const totalBytes = result?.totalBytes || 0;
-  const categories = result?.categories || { Documents: 0, Images: 0, Notes: 0, Passwords: 0, Other: 0 };
+export async function StorageCard({ userId }: { userId: string }) {
+  const items = await prisma.vaultItem.findMany({
+    where: { profile_id: userId },
+    select: { type: true, encrypted_data: true }
+  });
+
+  const categories = { Documents: 0, Images: 0, Notes: 0, Passwords: 0, Other: 0 };
+  let totalBytes = 0;
+
+  items.forEach(item => {
+    const bytes = Buffer.byteLength(item.encrypted_data, 'utf8');
+    totalBytes += bytes;
+    
+    switch(item.type) {
+      case 'DOCUMENT': categories.Documents += bytes; break;
+      case 'SECURE_NOTE': categories.Notes += bytes; break;
+      case 'PASSWORD': categories.Passwords += bytes; break;
+      case 'IDENTITY': categories.Other += bytes; break;
+      default: categories.Other += bytes;
+    }
+  });
   
   const maxStorage = 100 * 1024 * 1024 * 1024; // 100 GB
   const usedPercentage = totalBytes > 0 ? ((totalBytes / maxStorage) * 100).toFixed(1) : "0";
@@ -36,12 +55,12 @@ export async function StorageCard() {
   const notesPassRot = (docsPct + imgPct + otherPct) * 360;
 
   return (
-    <div className="bg-[#0b1120] border border-slate-800 rounded-xl p-6 h-full flex flex-col justify-between">
+    <Link href="/settings/storage" className="block bg-[#0b1120] border border-slate-800 rounded-xl p-6 h-full flex flex-col justify-between hover:border-slate-700 hover:bg-[#111827]/50 transition-colors group outline-none focus:ring-2 focus:ring-[#10b981]/50 focus:ring-offset-1 focus:ring-offset-[#0b1120]">
       <div className="flex items-center justify-between mb-8">
-        <h3 className="font-medium text-white">Storage Usage</h3>
-        <button className="text-xs font-medium text-[#10b981] hover:text-[#059669] transition-colors">
+        <h3 className="font-medium text-white group-hover:text-slate-200">Storage Usage</h3>
+        <span className="text-xs font-medium text-[#10b981] group-hover:text-[#059669] transition-colors">
           Manage Storage
-        </button>
+        </span>
       </div>
       
       <div className="flex items-center gap-6 mb-8 justify-center">
@@ -112,6 +131,6 @@ export async function StorageCard() {
           <span className="text-slate-400">{formatBytes(categories.Notes + categories.Passwords)}</span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

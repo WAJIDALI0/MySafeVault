@@ -1,5 +1,6 @@
+// Cache bust: 1
 
-
+import { Suspense } from "react";
 import { SecurityScoreCard } from "../cards/security-score-card";
 import { VaultOverviewCard } from "../cards/vault-overview-card";
 import { QuickActionsCard } from "../cards/quick-actions-card";
@@ -8,9 +9,31 @@ import { RecentActivityCard } from "../cards/recent-activity-card";
 import { UpcomingExpirationsCard } from "../cards/upcoming-expirations-card";
 import { SecurityRecommendationsCard } from "../cards/security-recommendations-card";
 import { Calendar, Shield, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
+import { getCachedProfile } from "@/lib/services/profile.service";
+import { WidgetErrorBoundary } from "./widget-error-boundary";
 
-export function DashboardGrid() {
+function CardSkeleton({ h = "h-[300px]" }: { h?: string }) {
+  return <div className={`w-full bg-[#0b1120] border border-slate-800 rounded-xl ${h} animate-pulse`}></div>;
+}
+
+export async function DashboardGrid() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return null;
+  
+  let firstName = "User";
+  if (user) {
+    const profile = await getCachedProfile(user.id);
+    if (profile?.full_name) {
+      firstName = profile.full_name.split(" ")[0];
+    }
+  }
+
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const weekday = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
   return (
     <div className="flex flex-col h-full w-full max-w-[1600px] mx-auto pb-20">
       
@@ -18,7 +41,7 @@ export function DashboardGrid() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold font-outfit text-slate-900 dark:text-white flex items-center gap-2">
-            Welcome back, Wajid! 👋
+            Welcome back, {firstName}! 👋
           </h1>
           <p className="text-slate-500 text-sm mt-1">Here's what's happening with your vault today.</p>
         </div>
@@ -26,8 +49,8 @@ export function DashboardGrid() {
         <div className="flex items-center gap-3 bg-[#0b1120] border border-slate-800 rounded-lg px-4 py-2.5">
           <Calendar className="w-5 h-5 text-slate-400" />
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-slate-200">May 27, 2025</span>
-            <span className="text-xs text-slate-500">Tuesday</span>
+            <span className="text-sm font-medium text-slate-200">{today}</span>
+            <span className="text-xs text-slate-500">{weekday}</span>
           </div>
         </div>
       </div>
@@ -37,26 +60,46 @@ export function DashboardGrid() {
         
         {/* ROW 1 */}
         <div className="lg:col-span-2">
-          <VaultOverviewCard />
+          <WidgetErrorBoundary title="Vault Overview" h="h-[140px]">
+            <Suspense fallback={<CardSkeleton h="h-[140px]" />}>
+              <VaultOverviewCard userId={user.id} />
+            </Suspense>
+          </WidgetErrorBoundary>
         </div>
         <div className="lg:col-span-1">
-          <SecurityScoreCard />
+          <WidgetErrorBoundary title="Security Score" h="h-[140px]">
+            <Suspense fallback={<CardSkeleton h="h-[140px]" />}>
+              <SecurityScoreCard userId={user.id} />
+            </Suspense>
+          </WidgetErrorBoundary>
         </div>
 
         {/* ROW 2 */}
         <div className="lg:col-span-1">
-          <RecentActivityCard />
+          <WidgetErrorBoundary title="Recent Activity" h="h-[380px]">
+            <Suspense fallback={<CardSkeleton h="h-[380px]" />}>
+              <RecentActivityCard userId={user.id} />
+            </Suspense>
+          </WidgetErrorBoundary>
         </div>
         <div className="lg:col-span-1">
           <QuickActionsCard />
         </div>
         <div className="lg:col-span-1">
-          <StorageCard />
+          <WidgetErrorBoundary title="Storage Limits" h="h-[300px]">
+            <Suspense fallback={<CardSkeleton h="h-[300px]" />}>
+              <StorageCard userId={user.id} />
+            </Suspense>
+          </WidgetErrorBoundary>
         </div>
 
         {/* ROW 3 */}
         <div className="lg:col-span-2">
-          <UpcomingExpirationsCard />
+          <WidgetErrorBoundary title="Upcoming Expirations" h="h-[380px]">
+            <Suspense fallback={<CardSkeleton h="h-[380px]" />}>
+              <UpcomingExpirationsCard userId={user.id} />
+            </Suspense>
+          </WidgetErrorBoundary>
         </div>
         <div className="lg:col-span-1">
           <SecurityRecommendationsCard />

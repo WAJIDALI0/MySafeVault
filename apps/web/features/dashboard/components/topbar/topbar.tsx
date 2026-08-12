@@ -1,11 +1,28 @@
-"use client";
-
 import { SearchBar } from "./search-bar";
 import { QuickAdd } from "./quick-add";
 import { NotificationButton } from "./notification-button";
 import { UserMenu } from "./user-menu";
+import { createClient } from "@/lib/supabase/server";
+import { getCachedProfile } from "@/lib/services/profile.service";
 
-export function Topbar() {
+export async function Topbar() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let profile = {
+    full_name: "User",
+    email: user?.email || "",
+    avatar: ""
+  };
+
+  if (user) {
+    const dbProfile = await getCachedProfile(user.id);
+    if (dbProfile) {
+      profile.full_name = dbProfile.full_name || user.email?.split("@")[0] || "User";
+      profile.avatar = dbProfile.avatar || "";
+    }
+  }
+
   return (
     <header className="h-16 w-full flex items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-md sticky top-0 z-40">
       
@@ -19,7 +36,7 @@ export function Topbar() {
         <QuickAdd />
         <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block" />
         <NotificationButton />
-        <UserMenu />
+        <UserMenu profile={profile} />
       </div>
       
     </header>

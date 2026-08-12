@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma/client";
 
+import { getDashboardStats } from "../services/dashboard.service";
+
 export async function getDashboardCounts() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -12,23 +14,10 @@ export async function getDashboardCounts() {
   }
 
   try {
-    const [totalItems, passwords, documents, secureNotes, favorites] = await Promise.all([
-      prisma.vaultItem.count({ where: { profile_id: user.id } }),
-      prisma.vaultItem.count({ where: { profile_id: user.id, type: "PASSWORD" } }),
-      prisma.vaultItem.count({ where: { profile_id: user.id, type: "DOCUMENT" } }),
-      prisma.vaultItem.count({ where: { profile_id: user.id, type: "SECURE_NOTE" } }),
-      prisma.vaultItem.count({ where: { profile_id: user.id, is_favorite: true } }),
-    ]);
-
+    const stats = await getDashboardStats(user.id);
     return {
       success: true,
-      data: {
-        totalItems,
-        passwords,
-        documents,
-        secureNotes,
-        favorites,
-      }
+      data: stats
     };
   } catch (error) {
     console.error("Failed to fetch dashboard counts:", error);
