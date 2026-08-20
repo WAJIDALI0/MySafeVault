@@ -7,7 +7,7 @@ import { QuickActionsCard } from "../cards/quick-actions-card";
 import { StorageCard } from "../cards/storage-card";
 import { RecentActivityCard } from "../cards/recent-activity-card";
 import { UpcomingExpirationsCard } from "../cards/upcoming-expirations-card";
-import { SecurityRecommendationsCard } from "../cards/security-recommendations-card";
+import { SecurityInsightsCard } from "../cards/security-insights-card";
 import { Calendar, Shield, RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCachedProfile } from "@/lib/services/profile.service";
@@ -102,7 +102,11 @@ export async function DashboardGrid() {
           </WidgetErrorBoundary>
         </div>
         <div className="lg:col-span-1">
-          <SecurityRecommendationsCard />
+          <WidgetErrorBoundary title="Security Insights" h="h-[380px]">
+            <Suspense fallback={<CardSkeleton h="h-[380px]" />}>
+              <SecurityInsightsCard userId={user.id} />
+            </Suspense>
+          </WidgetErrorBoundary>
         </div>
 
       </div>

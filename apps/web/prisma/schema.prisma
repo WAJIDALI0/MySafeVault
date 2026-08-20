@@ -22,6 +22,7 @@ model Profile {
   logs        ActivityLog[]
   vault_items VaultItem[]
   notifications Notification[]
+  webauthn_credentials WebAuthnCredential[]
 
   @@map("profiles")
 }
@@ -99,4 +100,22 @@ model Notification {
 
   @@index([profile_id, is_read])
   @@map("notifications")
+}
+
+model WebAuthnCredential {
+  id              String   @id @default(uuid()) @db.Uuid
+  profile_id      String   @db.Uuid
+  credential_id   String   @unique
+  public_key      Bytes
+  counter         BigInt
+  device_type     String
+  backed_up       Boolean
+  transports      String?  // Stored as comma separated string
+  created_at      DateTime @default(now())
+  last_used_at    DateTime @default(now())
+
+  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@index([profile_id])
+  @@map("webauthn_credentials")
 }

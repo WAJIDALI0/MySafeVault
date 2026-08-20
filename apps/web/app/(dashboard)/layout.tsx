@@ -8,9 +8,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0B1120] overflow-hidden text-slate-900 dark:text-white">
+    <div className="flex flex-col lg:flex-row h-screen w-full bg-slate-50 dark:bg-[#0B1120] overflow-hidden text-slate-900 dark:text-white">
       {/* Desktop Sidebar (and Mobile Drawer) */}
-      <Suspense fallback={<div className="w-64 border-r border-slate-800 hidden md:block bg-[#0B1120]" />}>
+      <Suspense fallback={<div className="w-64 border-r border-slate-800 hidden lg:block bg-[#0B1120]" />}>
         <Sidebar />
       </Suspense>
 

@@ -12,7 +12,7 @@ export async function getDashboardStats(userId: string) {
   const previousPeriodStart = new Date();
   previousPeriodStart.setDate(previousPeriodStart.getDate() - 14);
 
-  const [items, favoritesCount, currentPeriodCount, previousPeriodCount] = await prisma.$transaction([
+  const [items, favoritesCount, currentPeriodCount, previousPeriodCount] = await Promise.all([
     prisma.vaultItem.groupBy({
       by: ['type'],
       where: { profile_id: userId },

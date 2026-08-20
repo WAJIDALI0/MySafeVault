@@ -61,16 +61,28 @@ export async function SecurityScoreCard({ userId }: { userId: string }) {
           
           {/* Checklist */}
           <div className="flex flex-col gap-3 min-w-0 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">
-            {data.passes.map((pass, i) => (
-              <div key={`pass-${i}`} className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[#10b981] flex-shrink-0" />
-                <span className="text-xs text-slate-300 truncate">{pass}</span>
+            {data.score === 100 ? (
+              <div className="mb-1">
+                <p className="text-sm font-semibold text-emerald-400 mb-1">Excellent Security 🛡️</p>
+                <p className="text-xs text-slate-400 leading-relaxed">Your account meets all currently implemented security checks.</p>
+              </div>
+            ) : (
+              <div className="mb-1">
+                <p className="text-sm font-semibold text-white mb-1">Improvements available</p>
+                <p className="text-xs text-slate-400 leading-relaxed">Address the following warnings to improve your vault's security.</p>
+              </div>
+            )}
+
+            {data.warnings.map((warning, i) => (
+              <div key={`warn-${i}`} className="flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-[#f59e0b] flex-shrink-0 mt-0.5" />
+                <span className="text-xs text-slate-300">{warning}</span>
               </div>
             ))}
-            {data.warnings.map((warning, i) => (
-              <div key={`warn-${i}`} className="flex items-center gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 text-[#f59e0b] flex-shrink-0" />
-                <span className="text-xs text-slate-300 truncate">{warning}</span>
+            {data.score !== 100 && data.passes.map((pass, i) => (
+              <div key={`pass-${i}`} className="flex items-start gap-2 opacity-60">
+                <Check className="w-3.5 h-3.5 text-[#10b981] flex-shrink-0 mt-0.5" />
+                <span className="text-xs text-slate-300">{pass}</span>
               </div>
             ))}
             {data.passes.length === 0 && data.warnings.length === 0 && (

@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma/client";
 import { encryptData, decryptData } from "@/lib/encryption";
 import { revalidatePath } from "next/cache";
 import { VaultItemType } from "@prisma/client";
-import * as fs from "fs";
 import { createNotification } from "@/lib/services/notification.service";
 
 interface AddVaultItemParams {
@@ -69,7 +68,6 @@ export async function addVaultItem({ type, title, description, data }: AddVaultI
     return { success: true, item: newItem };
   } catch (error: any) {
     console.error("Failed to add vault item:", error);
-    fs.writeFileSync("last-error.log", error?.stack || error?.message || String(error));
     return { error: "Failed to create item securely." };
   }
 }

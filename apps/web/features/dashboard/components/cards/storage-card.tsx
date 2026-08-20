@@ -11,16 +11,21 @@ function formatBytes(bytes: number) {
 }
 
 export async function StorageCard({ userId }: { userId: string }) {
-  const items = await prisma.vaultItem.findMany({
-    where: { profile_id: userId },
-    select: { type: true, encrypted_data: true }
-  });
+  let items: any[] = [];
+  try {
+    items = await prisma.vaultItem.findMany({
+      where: { profile_id: userId },
+      select: { type: true, encrypted_data: true }
+    });
+  } catch (e: any) {
+    console.error("StorageCard Prisma Error:", e.message || e);
+  }
 
   const categories = { Documents: 0, Images: 0, Notes: 0, Passwords: 0, Other: 0 };
   let totalBytes = 0;
 
   items.forEach(item => {
-    const bytes = Buffer.byteLength(item.encrypted_data, 'utf8');
+    const bytes = item.encrypted_data ? Buffer.byteLength(item.encrypted_data, 'utf8') : 0;
     totalBytes += bytes;
     
     switch(item.type) {

@@ -1,16 +1,21 @@
 import { getCachedProfile } from '@/features/profile/services/profile.service';
 import { ProfileForm } from '@/features/profile/components/profile-form';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata = {
   title: 'Account Settings | MySafeVault',
 };
 
 export default async function AccountSettingsPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const profile = await getCachedProfile();
 
-  if (!profile) {
+  if (!profile || !user) {
     return <div>Error loading profile.</div>;
   }
+
+  const isEmailVerified = !!user.email_confirmed_at;
 
   return (
     <div className="space-y-6">
@@ -23,7 +28,8 @@ export default async function AccountSettingsPage() {
           <ProfileForm 
             initialFullName={profile.full_name || ''} 
             email={profile.email || ''} 
-          avatarUrl={profile.avatar || ''} 
+            avatarUrl={profile.avatar || ''} 
+            isEmailVerified={isEmailVerified}
         />
       </div>
     </div>

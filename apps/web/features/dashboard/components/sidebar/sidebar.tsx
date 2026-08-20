@@ -19,6 +19,7 @@ import {
   Lock,
 } from "lucide-react";
 import { MobileSidebar } from "./mobile-sidebar";
+import { InstallAppButton } from "../shared/install-app-button";
 
 const mainNavItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -33,7 +34,7 @@ const secondaryNavItems = [
   { name: "Search", href: "/search", icon: Search },
   { name: "Activity", href: "/activity", icon: Activity },
   { name: "Notifications", href: "/notifications", icon: Bell },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Settings", href: "/settings/account", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -154,10 +155,8 @@ export function Sidebar() {
                 <div className="flex justify-between"><span>Other:</span> <span>{formatBytes(categories?.Other || 0)}</span></div>
               </div>
             )}
-
-            <button className="w-full py-1.5 px-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold rounded-md hover:opacity-90 transition-opacity">
-              Upgrade Plan 👑
-            </button>
+            
+            <InstallAppButton />
           </div>
         </div>
       </aside>

@@ -22,6 +22,9 @@
 * **📄 Secure Document Storage**: Upload and encrypt important documents. Tracks file sizes and allows setting exact expiration dates for warranties and IDs.
 * **📝 Privacy-First Notes**: Secure notes hidden behind a dynamic "Lock/Unlock" privacy screen to prevent shoulder-surfing.
 * **📊 Live Storage Calculator**: A backend-powered calculation engine that sums the exact byte lengths of your encrypted records and visualizes usage dynamically across your dashboard.
+* **🚀 Stunning Marketing Landing Page**: A beautifully designed, highly-converting public landing page featuring modern glassmorphism, responsive bento grids, and micro-animations.
+* **📱 Progressive Web App (PWA)**: Installable natively on iOS and Android devices directly from the browser for a native app-like experience.
+* **👆 Biometric Step-Up Authentication**: Enterprise-grade WebAuthn integration. Secure your most sensitive vault items with native Face ID, Touch ID, or Windows Hello. Passwords and Secure Notes remain locked until biometric verification is complete.
 
 ---
 

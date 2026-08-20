@@ -13,6 +13,16 @@ import {
 import { logActivity } from "@/lib/logger/activity";
 import { createNotification } from "@/lib/services/notification.service";
 
+export async function resendVerificationEmail(email: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({ type: 'signup', email });
+  
+  if (error) {
+    return { error: error.message };
+  }
+  return { success: true };
+}
+
 export async function login(formData: z.infer<typeof LoginSchema>) {
   const supabase = await createClient();
   const parsed = LoginSchema.safeParse(formData);

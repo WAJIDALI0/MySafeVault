@@ -27,15 +27,20 @@ export function SettingsSidebar() {
             key={item.href}
             href={item.href}
             className={`
-              flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium
+              relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium overflow-hidden
               ${isActive 
                 ? (item.danger 
-                    ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' 
-                    : 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400')
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400' 
+                    : 'bg-[#10b981]/10 text-[#10b981] dark:text-[#34d399]')
+                : (item.danger 
+                    ? 'text-slate-600 dark:text-slate-400 hover:bg-rose-50/50 dark:hover:bg-rose-900/10 hover:text-rose-500' 
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50')
               }
             `}
           >
+            {isActive && (
+              <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.danger ? 'bg-rose-500' : 'bg-[#10b981]'} rounded-r-full`} />
+            )}
             <Icon className={`w-5 h-5 ${isActive && item.danger ? 'text-red-500' : ''}`} />
             {item.label}
           </Link>

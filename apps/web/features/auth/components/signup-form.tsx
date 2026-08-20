@@ -98,25 +98,7 @@ export function SignupForm() {
         Create account
       </Button>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t dark:border-slate-800" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white dark:bg-slate-950 px-2 text-muted-foreground">Or continue with</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Button variant="outline" type="button">
-          Google
-        </Button>
-        <Button variant="outline" type="button">
-          GitHub
-        </Button>
-      </div>
-
-      <p className="text-center text-sm text-slate-600 dark:text-slate-400">
+      <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
         Already have an account? <Link href="/login" className="text-[#10B981] hover:underline">Login</Link>
       </p>
     </form>

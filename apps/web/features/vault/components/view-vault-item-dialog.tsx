@@ -2,8 +2,10 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Copy, Check, Eye, EyeOff, ShieldCheck, Shield, ExternalLink, Download, LockOpen, Lock, Star } from "lucide-react";
+import { Loader2, Copy, Check, Eye, EyeOff, ShieldCheck, Shield, ExternalLink, Download, LockOpen, Lock, Star, Fingerprint } from "lucide-react";
 import { getVaultItemData, deleteVaultItem } from "../actions/vault.actions";
+import { getWebAuthnAuthenticationOptions, verifyWebAuthnAuthentication } from "@/features/auth/actions/webauthn.actions";
+import { startAuthentication } from "@simplewebauthn/browser";
 import { getPasswordStrength } from "@/lib/password-utils";
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil } from "lucide-react";
@@ -31,6 +33,7 @@ export function ViewVaultItemDialog({ itemId, itemTitle, itemType, itemIsFavorit
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
     if (open && itemId) {
@@ -62,6 +65,29 @@ export function ViewVaultItemDialog({ itemId, itemTitle, itemType, itemIsFavorit
     }
   };
 
+  const handleRevealSecret = async (onSuccess: () => void) => {
+    setIsAuthenticating(true);
+    try {
+      const options = await getWebAuthnAuthenticationOptions(window.location.origin);
+      const authResp = await startAuthentication(options);
+      const verifyResp = await verifyWebAuthnAuthentication(authResp, window.location.origin);
+      if (verifyResp.success) {
+        onSuccess();
+      }
+    } catch (err: any) {
+      console.error(err);
+      if (err.message === "No biometrics registered for this account.") {
+        // Fallback to instantly showing it if no biometrics are set up
+        onSuccess();
+      } else if (err.name !== 'NotAllowedError') {
+        // Don't alert if user just cancelled the prompt
+        alert("Authentication failed: " + err.message);
+      }
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
@@ -78,14 +104,21 @@ export function ViewVaultItemDialog({ itemId, itemTitle, itemType, itemIsFavorit
           <div className="flex-1 bg-[#111827] border border-slate-800 rounded-lg p-3 text-sm text-slate-200 font-mono flex items-center justify-between group">
             {isSecret && !showPassword ? "••••••••••••" : value}
             
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               {isSecret && (
                 <button 
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="p-1.5 hover:bg-slate-800 rounded-md text-slate-400 hover:text-white transition-colors"
+                  onClick={() => {
+                    if (!showPassword) {
+                      handleRevealSecret(() => setShowPassword(true));
+                    } else {
+                      setShowPassword(false);
+                    }
+                  }}
+                  disabled={isAuthenticating}
+                  className="p-1.5 hover:bg-slate-800 rounded-md text-slate-400 hover:text-white transition-colors disabled:opacity-50"
                   title="Toggle visibility"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {isAuthenticating ? <Loader2 className="w-4 h-4 animate-spin" /> : showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               )}
               {isLink && (
@@ -232,8 +265,17 @@ export function ViewVaultItemDialog({ itemId, itemTitle, itemType, itemIsFavorit
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Private Note</label>
                     {!noteUnlocked ? (
-                      <div className="bg-[#111827] border border-slate-800 rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => setNoteUnlocked(true)}>
-                        <Lock className="w-8 h-8 text-slate-500 mb-3" />
+                      <div className="bg-[#111827] border border-slate-800 rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-800/50 transition-colors" 
+                           onClick={() => {
+                             if (!isAuthenticating) {
+                               handleRevealSecret(() => setNoteUnlocked(true));
+                             }
+                           }}>
+                        {isAuthenticating ? (
+                          <Loader2 className="w-8 h-8 text-[#10b981] animate-spin mb-3" />
+                        ) : (
+                          <Lock className="w-8 h-8 text-slate-500 mb-3" />
+                        )}
                         <h4 className="text-sm font-medium text-slate-300">Note is locked</h4>
                         <p className="text-xs text-slate-500 mt-1">Click to unlock and reveal contents</p>
                       </div>
@@ -244,7 +286,7 @@ export function ViewVaultItemDialog({ itemId, itemTitle, itemType, itemIsFavorit
                         </p>
                         <button 
                           onClick={() => setNoteUnlocked(false)}
-                          className="absolute top-2 right-2 p-1.5 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                          className="absolute top-2 right-2 p-1.5 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-400 hover:text-white transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                           title="Lock note"
                         >
                           <LockOpen className="w-4 h-4" />

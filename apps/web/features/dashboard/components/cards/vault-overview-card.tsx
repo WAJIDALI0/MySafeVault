@@ -1,5 +1,6 @@
-import { FolderOpen, KeyRound, FileText, FileLock2, Star, TrendingUp, ChevronDown, Shield } from "lucide-react";
+import { FolderOpen, TrendingUp, ChevronDown, Shield } from "lucide-react";
 import { getDashboardStats } from "../../services/dashboard.service";
+import { getCategoryStyle } from "@/lib/utils/category-styles";
 import Link from "next/link";
 
 export async function VaultOverviewCard({ userId }: { userId: string }) {
@@ -9,10 +10,10 @@ export async function VaultOverviewCard({ userId }: { userId: string }) {
 
   const stats = [
     { label: "Total Items", value: data.totalItems.toString(), icon: FolderOpen, color: "text-slate-400", bg: "bg-slate-800/50", trend: trendLabel, href: "/vault" },
-    { label: "Passwords", value: data.passwords.toString(), icon: KeyRound, color: "text-purple-500", bg: "bg-purple-500/10", trend: trendLabel, href: "/vault?category=PASSWORD" },
-    { label: "Documents", value: data.documents.toString(), icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10", trend: trendLabel, href: "/vault?category=DOCUMENT" },
-    { label: "Secure Notes", value: data.secureNotes.toString(), icon: FileLock2, color: "text-amber-500", bg: "bg-amber-500/10", trend: trendLabel, href: "/vault?category=SECURE_NOTE" },
-    { label: "Favorites", value: data.favorites.toString(), icon: Star, color: "text-rose-500", bg: "bg-rose-500/10", trend: trendLabel, href: "/vault?favorites=true" },
+    { label: "Passwords", value: data.passwords.toString(), icon: getCategoryStyle('PASSWORD').icon, color: getCategoryStyle('PASSWORD').textColor, bg: getCategoryStyle('PASSWORD').bgColor, trend: trendLabel, href: "/vault?category=PASSWORD" },
+    { label: "Documents", value: data.documents.toString(), icon: getCategoryStyle('DOCUMENT').icon, color: getCategoryStyle('DOCUMENT').textColor, bg: getCategoryStyle('DOCUMENT').bgColor, trend: trendLabel, href: "/vault?category=DOCUMENT" },
+    { label: "Secure Notes", value: data.secureNotes.toString(), icon: getCategoryStyle('SECURE_NOTE').icon, color: getCategoryStyle('SECURE_NOTE').textColor, bg: getCategoryStyle('SECURE_NOTE').bgColor, trend: trendLabel, href: "/vault?category=SECURE_NOTE" },
+    { label: "Favorites", value: data.favorites.toString(), icon: getCategoryStyle('FAVORITE').icon, color: getCategoryStyle('FAVORITE').textColor, bg: getCategoryStyle('FAVORITE').bgColor, trend: trendLabel, href: "/vault?favorites=true" },
   ];
 
   return (
@@ -25,11 +26,6 @@ export async function VaultOverviewCard({ userId }: { userId: string }) {
           </div>
           <h3 className="font-medium text-white">Vault Overview</h3>
         </div>
-        
-        <button className="flex items-center gap-2 text-xs font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700/50 transition-colors">
-          This Week
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-        </button>
       </div>
       
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 flex-1">

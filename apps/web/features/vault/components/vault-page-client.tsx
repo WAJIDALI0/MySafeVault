@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VaultItemsGrid } from "@/features/vault/components/vault-items-grid";
 import { AddVaultItemDialog } from "@/features/vault/components/add-vault-item-dialog";
+import { getCategoryStyle } from "@/lib/utils/category-styles";
 
 interface VaultPageClientProps {
   initialItems: any[];
@@ -56,13 +57,13 @@ export function VaultPageClient({ initialItems }: VaultPageClientProps) {
 
   const categories = [
     { label: "All Items", icon: Shield, id: "ALL" },
-    { label: "Passwords", icon: KeyRound, id: "PASSWORD" },
-    { label: "Documents", icon: FileText, id: "DOCUMENT" },
-    { label: "Secure Notes", icon: FileLock2, id: "SECURE_NOTE" },
-    { label: "Identity", icon: Fingerprint, id: "IDENTITY" },
-    { label: "Receipts", icon: Receipt, id: "RECEIPT" },
-    { label: "Warranties", icon: ShieldCheck, id: "WARRANTY" },
-    { label: "Favorites", icon: Star, id: "FAVORITES" },
+    { label: getCategoryStyle('PASSWORD').label + "s", icon: getCategoryStyle('PASSWORD').icon, id: "PASSWORD" },
+    { label: getCategoryStyle('DOCUMENT').label + "s", icon: getCategoryStyle('DOCUMENT').icon, id: "DOCUMENT" },
+    { label: getCategoryStyle('SECURE_NOTE').label + "s", icon: getCategoryStyle('SECURE_NOTE').icon, id: "SECURE_NOTE" },
+    { label: getCategoryStyle('IDENTITY').label, icon: getCategoryStyle('IDENTITY').icon, id: "IDENTITY" },
+    { label: getCategoryStyle('RECEIPT').label + "s", icon: getCategoryStyle('RECEIPT').icon, id: "RECEIPT" },
+    { label: getCategoryStyle('WARRANTY').label, icon: getCategoryStyle('WARRANTY').icon, id: "WARRANTY" },
+    { label: "Favorites", icon: getCategoryStyle('FAVORITE').icon, id: "FAVORITES" },
   ];
 
   // Filter items instantly on the client side

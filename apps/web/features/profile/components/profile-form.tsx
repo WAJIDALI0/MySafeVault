@@ -2,18 +2,21 @@
 
 import { useState } from 'react';
 import { updateProfile } from '../actions/profile.actions';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { resendVerificationEmail } from '@/features/auth/actions/auth.actions';
 
 interface ProfileFormProps {
   initialFullName: string;
   email: string;
   avatarUrl: string;
+  isEmailVerified: boolean;
 }
 
-export function ProfileForm({ initialFullName, email, avatarUrl }: ProfileFormProps) {
+export function ProfileForm({ initialFullName, email, avatarUrl, isEmailVerified }: ProfileFormProps) {
   const [fullName, setFullName] = useState(initialFullName);
   const [avatar, setAvatar] = useState(avatarUrl);
   const [loading, setLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,6 +50,23 @@ export function ProfileForm({ initialFullName, email, avatarUrl }: ProfileFormPr
       setMessage({ type: 'error', text: 'Failed to update profile.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setIsResending(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const res = await resendVerificationEmail(email);
+      if (res.error) {
+        setMessage({ type: 'error', text: res.error });
+      } else {
+        setMessage({ type: 'success', text: 'Verification email sent successfully.' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to send verification email.' });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -101,13 +121,30 @@ export function ProfileForm({ initialFullName, email, avatarUrl }: ProfileFormPr
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             Email Address
           </label>
-          <input
-            type="email"
-            value={email}
-            disabled
-            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed"
-          />
-          <p className="text-xs text-slate-500 mt-1">Email cannot be changed here for security reasons.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <input
+              type="email"
+              value={email}
+              disabled
+              className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed"
+            />
+            {isEmailVerified ? (
+              <span className="flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-500 shrink-0">
+                <CheckCircle2 className="w-4 h-4" /> Verified
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={isResending}
+                className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 rounded-lg transition-colors shrink-0 disabled:opacity-50"
+              >
+                {isResending ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+                Resend Verification
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-slate-500 mt-2">Email cannot be changed here for security reasons.</p>
         </div>
       </div>
 

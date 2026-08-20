@@ -52,14 +52,20 @@ export async function RecentActivityCard({ userId }: { userId: string }) {
     <div className="bg-[#0b1120] border border-slate-800 rounded-xl p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-medium text-white">Recent Activity</h3>
-        <Link href="/activity" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+        <Link href="/settings/security" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
           View all
         </Link>
       </div>
 
       <div className="space-y-5 flex-1">
         {logs.length === 0 ? (
-          <div className="text-slate-500 text-sm italic py-4">No recent activity.</div>
+          <div className="flex flex-col items-center justify-center h-full py-8 text-center">
+            <div className="w-10 h-10 bg-slate-800/50 rounded-full flex items-center justify-center mb-3">
+              <Shield className="w-5 h-5 text-slate-500" />
+            </div>
+            <p className="text-sm font-medium text-slate-300">No recent activity</p>
+            <p className="text-xs text-slate-500 mt-1">Security events will appear here.</p>
+          </div>
         ) : (
           logs.map((log: any) => {
             const config = getActivityConfig(log.action, log.metadata);

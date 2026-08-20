@@ -31,10 +31,15 @@ export async function getSecurityScore(userId: string) {
 
   // 3. Password Strength (Based on metadata if available)
   // We'll query passwords that have metadata indicating weakness
-  const allPasswords = await prisma.vaultItem.findMany({
-    where: { profile_id: userId, type: 'PASSWORD' },
-    select: { metadata: true }
-  });
+  let allPasswords: any[] = [];
+  try {
+    allPasswords = await prisma.vaultItem.findMany({
+      where: { profile_id: userId, type: 'PASSWORD' },
+      select: { metadata: true }
+    });
+  } catch (e: any) {
+    console.error("getSecurityScore Prisma Error:", e.message || e);
+  }
 
   let weakCount = 0;
   

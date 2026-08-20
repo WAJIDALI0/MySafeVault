@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  const { supabaseResponse, user } = await updateSession(request);
+  const { supabaseResponse, user, supabase } = await updateSession(request);
 
   const url = request.nextUrl.clone();
   
@@ -17,15 +17,28 @@ export async function middleware(request: NextRequest) {
   }
   
   // Protect specific routes
-  if (!user && (
+  const isProtectedRoute = 
     url.pathname.startsWith('/dashboard') ||
     url.pathname.startsWith('/vault') ||
     url.pathname.startsWith('/settings') ||
     url.pathname.startsWith('/profile') ||
-    url.pathname.startsWith('/api/private')
-  )) {
+    url.pathname.startsWith('/api/private');
+
+  if (!user && isProtectedRoute) {
     url.pathname = '/login';
     return NextResponse.redirect(url);
+  }
+
+  // Check MFA (AAL2) requirement for protected routes
+  if (user && isProtectedRoute) {
+    const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (!aalError && aal) {
+      if (aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+        url.pathname = '/mfa-verify';
+        url.searchParams.set('next', request.nextUrl.pathname);
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   // Redirect auth pages to dashboard if already logged in
