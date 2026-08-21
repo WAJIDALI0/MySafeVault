@@ -1,5 +1,6 @@
 import { Sidebar } from "@/features/dashboard/components/sidebar/sidebar";
 import { Topbar } from "@/features/dashboard/components/topbar/topbar";
+import { SecurityAssistant } from "@/features/dashboard/components/chat/security-assistant";
 import { Suspense } from "react";
 
 export default function DashboardLayout({
@@ -21,6 +22,8 @@ export default function DashboardLayout({
             {children}
           </div>
         </main>
+        
+        <SecurityAssistant />
       </div>
     </div>
   );

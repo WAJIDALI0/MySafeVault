@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { Mail, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { resendVerificationEmail } from '@/features/auth/actions/auth.actions';
+import { sendWelcomeEmail } from '@/features/settings/actions/email.actions';
 
 interface EmailSecurityCardProps {
   email: string;
@@ -21,6 +22,18 @@ export function EmailSecurityCard({ email, isVerified }: EmailSecurityCardProps)
         setMessage({ type: 'error', text: res.error });
       } else {
         setMessage({ type: 'success', text: 'Verification email sent!' });
+      }
+    });
+  };
+
+  const handleTestResend = () => {
+    setMessage(null);
+    startTransition(async () => {
+      const res = await sendWelcomeEmail();
+      if (res?.error) {
+        setMessage({ type: 'error', text: `Resend: ${res.error}` });
+      } else {
+        setMessage({ type: 'success', text: 'Resend: Test email sent successfully!' });
       }
     });
   };
@@ -64,6 +77,28 @@ export function EmailSecurityCard({ email, isVerified }: EmailSecurityCardProps)
               className="px-4 py-2 text-sm font-medium text-white bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[140px]"
             >
               {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Resend Email'}
+            </button>
+          </div>
+          {message && (
+            <p className={`text-sm mt-3 ${message.type === 'error' ? 'text-rose-500' : 'text-emerald-500'}`}>
+              {message.text}
+            </p>
+          )}
+        </div>
+      )}
+
+      {isVerified && (
+        <div className="mt-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Test Resend Integration
+            </p>
+            <button 
+              onClick={handleTestResend}
+              disabled={isPending}
+              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[140px]"
+            >
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Test Resend'}
             </button>
           </div>
           {message && (

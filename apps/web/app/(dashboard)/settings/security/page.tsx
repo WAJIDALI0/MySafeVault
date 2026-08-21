@@ -5,6 +5,7 @@ import { PasswordSecurityCard } from '@/features/settings/components/password-se
 import { MfaSecurityCard } from '@/features/settings/components/mfa-security-card';
 import { BiometricsSecurityCard } from '@/features/settings/components/biometrics-security-card';
 import { ActiveSessionsCard } from '@/features/settings/components/active-sessions-card';
+import { SentryTestCard } from '@/features/settings/components/sentry-test-card';
 import { EmailSecurityCard } from '@/features/settings/components/email-security-card';
 import { SecurityActivityList } from '@/features/settings/components/security-activity-list';
 import { prisma } from '@/lib/prisma/client';
@@ -128,6 +129,7 @@ export default async function SecuritySettingsPage() {
           <BiometricsSecurityCard hasBiometrics={hasBiometrics} />
           <MfaSecurityCard isMfaEnabled={isMfaEnabled} />
           <ActiveSessionsCard />
+          <SentryTestCard />
         </div>
 
         {/* Security Activity List */}

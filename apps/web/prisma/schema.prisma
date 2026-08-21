@@ -9,48 +9,37 @@ datasource db {
 }
 
 model Profile {
-  id         String   @id @db.Uuid // Must map to Supabase auth.users.id
-  full_name  String?
-  avatar     String?
-  timezone   String?  @default("UTC")
-  language   String?  @default("en")
-  theme      String?  @default("system")
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  preferences UserPreference?
-  logs        ActivityLog[]
-  vault_items VaultItem[]
-  notifications Notification[]
+  id                   String               @id @db.Uuid
+  full_name            String?
+  avatar               String?
+  timezone             String?              @default("UTC")
+  language             String?              @default("en")
+  theme                String?              @default("system")
+  created_at           DateTime             @default(now())
+  updated_at           DateTime             @updatedAt
+  logs                 ActivityLog[]
+  notifications        Notification[]
+  preferences          UserPreference?
+  vault_items          VaultItem[]
   webauthn_credentials WebAuthnCredential[]
 
   @@map("profiles")
 }
 
-enum VaultItemType {
-  PASSWORD
-  DOCUMENT
-  SECURE_NOTE
-  IDENTITY
-  RECEIPT
-  WARRANTY
-}
-
 model VaultItem {
-  id            String        @id @default(uuid()) @db.Uuid
-  profile_id    String        @db.Uuid
-  type          VaultItemType
-  title         String
-  description   String?
-  is_favorite   Boolean       @default(false)
+  id             String        @id @default(uuid()) @db.Uuid
+  profile_id     String        @db.Uuid
+  type           VaultItemType
+  title          String
+  description    String?
+  is_favorite    Boolean       @default(false)
+  encrypted_data String
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
   /// SECURITY: Only non-sensitive data (e.g. expiration dates, file sizes, tags, password strength metrics) is allowed here.
   /// FORBIDDEN: passwords, hashes, secure note contents, identities, documents, keys, tokens, or any sensitive plaintext.
-  metadata      Json?         @default("{}")
-  encrypted_data String       @db.Text
-  created_at    DateTime      @default(now())
-  updated_at    DateTime      @updatedAt
-
-  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  metadata       Json?         @default("{}")
+  profile        Profile       @relation(fields: [profile_id], references: [id], onDelete: Cascade)
 
   @@index([profile_id])
   @@map("vault_items")
@@ -65,8 +54,7 @@ model UserPreference {
   storage_settings      Json     @default("{}")
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
-
-  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  profile               Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
 
   @@map("user_preferences")
 }
@@ -74,11 +62,10 @@ model UserPreference {
 model ActivityLog {
   id         String   @id @default(uuid()) @db.Uuid
   profile_id String   @db.Uuid
-  action     String   // login, logout, password_changed, profile_updated, email_changed
+  action     String
   metadata   Json     @default("{}")
   created_at DateTime @default(now())
-
-  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  profile    Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
 
   @@index([profile_id])
   @@map("activity_logs")
@@ -87,7 +74,7 @@ model ActivityLog {
 model Notification {
   id         String    @id @default(uuid()) @db.Uuid
   profile_id String    @db.Uuid
-  type       String    // e.g. "SECURITY", "EXPIRATION", "SYSTEM"
+  type       String
   title      String
   message    String
   is_read    Boolean   @default(false)
@@ -95,27 +82,34 @@ model Notification {
   metadata   Json      @default("{}")
   created_at DateTime  @default(now())
   read_at    DateTime?
-
-  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  profile    Profile   @relation(fields: [profile_id], references: [id], onDelete: Cascade)
 
   @@index([profile_id, is_read])
   @@map("notifications")
 }
 
 model WebAuthnCredential {
-  id              String   @id @default(uuid()) @db.Uuid
-  profile_id      String   @db.Uuid
-  credential_id   String   @unique
-  public_key      Bytes
-  counter         BigInt
-  device_type     String
-  backed_up       Boolean
-  transports      String?  // Stored as comma separated string
-  created_at      DateTime @default(now())
-  last_used_at    DateTime @default(now())
-
-  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid()) @db.Uuid
+  profile_id    String   @db.Uuid
+  credential_id String   @unique
+  public_key    Bytes
+  counter       BigInt
+  device_type   String
+  backed_up     Boolean
+  transports    String?
+  created_at    DateTime @default(now())
+  last_used_at  DateTime @default(now())
+  profile       Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
 
   @@index([profile_id])
   @@map("webauthn_credentials")
+}
+
+enum VaultItemType {
+  PASSWORD
+  DOCUMENT
+  SECURE_NOTE
+  IDENTITY
+  RECEIPT
+  WARRANTY
 }
