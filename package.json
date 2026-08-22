@@ -7,7 +7,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "prepare": "husky",
-    "postinstall": "npx prisma generate --schema=apps/web/prisma/schema.prisma"
+    "postinstall": "npx prisma@6.19.3 generate --schema=apps/web/prisma/schema.prisma"
   },
   "devDependencies": {
     "turbo": "latest",
