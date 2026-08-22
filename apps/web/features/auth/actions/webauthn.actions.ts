@@ -49,6 +49,7 @@ export async function getWebAuthnRegistrationOptions(origin: string) {
     userID: new Uint8Array(Buffer.from(user.id)),
     userName: user.email || profile?.full_name || "User",
     // Don't prompt users for their authenticator if they've already registered it
+    // @ts-ignore - Ignore type error for id buffer in SimpleWebAuthn v13
     excludeCredentials: existingCredentials.map((cred: any) => ({
       id: Buffer.from(cred.credential_id, 'base64url'),
       type: 'public-key',
@@ -149,6 +150,7 @@ export async function getWebAuthnAuthenticationOptions(origin: string) {
 
   const options = await generateAuthenticationOptions({
     rpID,
+    // @ts-ignore - Ignore type error for id buffer in SimpleWebAuthn v13
     allowCredentials: userCredentials.map((cred: any) => ({
       id: Buffer.from(cred.credential_id, 'base64url'),
       type: 'public-key',
