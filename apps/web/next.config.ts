@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    outputFileTracingIncludes: {
+      "/*": ["./../../node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/*.node"]
+    }
   },
   async headers() {
     return [
@@ -50,9 +53,4 @@ export default withSentryConfig(nextConfig, {
   project: "web",
   widenClientFileUpload: true,
   // hideSourceMaps: true,
-  experimental: {
-    outputFileTracingIncludes: {
-      "/*": ["./../../node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/*.node"]
-    }
-  }
 });
