@@ -6,7 +6,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "prisma generate --schema=apps/web/prisma/schema.prisma"
   },
   "devDependencies": {
     "turbo": "latest",
