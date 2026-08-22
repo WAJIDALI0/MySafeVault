@@ -49,7 +49,7 @@ export async function getWebAuthnRegistrationOptions(origin: string) {
     userID: new Uint8Array(Buffer.from(user.id)),
     userName: user.email || profile?.full_name || "User",
     // Don't prompt users for their authenticator if they've already registered it
-    excludeCredentials: existingCredentials.map(cred => ({
+    excludeCredentials: existingCredentials.map((cred: any) => ({
       id: Buffer.from(cred.credential_id, 'base64url'),
       type: 'public-key',
       // transports: cred.transports ? cred.transports.split(',') as any : undefined,
