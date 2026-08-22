@@ -202,6 +202,7 @@ export async function verifyWebAuthnAuthentication(response: any, origin: string
       expectedChallenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
+      // @ts-ignore - Ignore type error for authenticator in SimpleWebAuthn v13
       authenticator: {
         credentialID: Buffer.from(credential.credential_id, 'base64url'),
         credentialPublicKey: credential.public_key,
