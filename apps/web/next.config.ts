@@ -50,4 +50,9 @@ export default withSentryConfig(nextConfig, {
   project: "web",
   widenClientFileUpload: true,
   // hideSourceMaps: true,
+  experimental: {
+    outputFileTracingIncludes: {
+      "/*": ["./../../node_modules/.pnpm/@prisma+client*/node_modules/.prisma/client/*.node"]
+    }
+  }
 });
