@@ -49,5 +49,5 @@ export default withSentryConfig(nextConfig, {
   org: "mysafevault",
   project: "web",
   widenClientFileUpload: true,
-  hideSourceMaps: true,
+  // hideSourceMaps: true,
 });
