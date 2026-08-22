@@ -19,7 +19,7 @@ export function BiometricsSecurityCard({ hasBiometrics }: { hasBiometrics: boole
       const options = await getWebAuthnRegistrationOptions(window.location.origin);
       
       // 2. Pass options to the browser to trigger Face ID / Touch ID
-      const authResponse = await startRegistration(options);
+      const authResponse = await startRegistration({ optionsJSON: options });
       
       // 3. Send the response back to the server to verify and save
       const verificationResp = await verifyWebAuthnRegistration(authResponse, window.location.origin);

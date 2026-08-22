@@ -69,7 +69,7 @@ export function ViewVaultItemDialog({ itemId, itemTitle, itemType, itemIsFavorit
     setIsAuthenticating(true);
     try {
       const options = await getWebAuthnAuthenticationOptions(window.location.origin);
-      const authResp = await startAuthentication(options);
+      const authResp = await startAuthentication({ optionsJSON: options });
       const verifyResp = await verifyWebAuthnAuthentication(authResp, window.location.origin);
       if (verifyResp.success) {
         onSuccess();
