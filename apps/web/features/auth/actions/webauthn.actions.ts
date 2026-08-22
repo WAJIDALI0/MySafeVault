@@ -149,7 +149,7 @@ export async function getWebAuthnAuthenticationOptions(origin: string) {
 
   const options = await generateAuthenticationOptions({
     rpID,
-    allowCredentials: userCredentials.map(cred => ({
+    allowCredentials: userCredentials.map((cred: any) => ({
       id: Buffer.from(cred.credential_id, 'base64url'),
       type: 'public-key',
       // transports: cred.transports ? cred.transports.split(',') as any : undefined,
