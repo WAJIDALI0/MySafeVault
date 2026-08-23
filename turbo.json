@@ -3,7 +3,14 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**"],
+      "env": [
+        "DATABASE_URL",
+        "DIRECT_URL",
+        "ENCRYPTION_KEY",
+        "GEMINI_API_KEY",
+        "RESEND_API_KEY"
+      ]
     },
     "dev": {
       "cache": false,
