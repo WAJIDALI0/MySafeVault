@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    serverComponentsExternalPackages: ['@prisma/client', 'prisma', 'swagger-ui-react'],
+    optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion', '@radix-ui/react-dialog', 'zod'],
   },
   async headers() {
     return [
