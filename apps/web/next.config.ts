@@ -44,12 +44,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
-  silent: true,
-  org: "mysafevault",
-  project: "web",
-  widenClientFileUpload: true,
-  sourcemaps: {
-    disable: true,
-  }
-});
+export default nextConfig;
