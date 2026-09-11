@@ -46,51 +46,59 @@ export function UserMenu({ profile }: UserMenuProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl py-1 z-50 animate-in fade-in zoom-in duration-150 origin-top-right flex flex-col">
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{profile?.full_name}</p>
-            <p className="text-xs text-slate-500 truncate">{profile?.email}</p>
-          </div>
-          
-          <div className="py-1">
-            <Link 
-              href="/profile" 
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              <UserCircle className="w-4 h-4 text-slate-400" />
-              Profile
-            </Link>
-            <Link 
-              href="/settings/account" 
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              <Settings className="w-4 h-4 text-slate-400" />
-              Settings
-            </Link>
-            <Link 
-              href="/activity" 
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              <Activity className="w-4 h-4 text-slate-400" />
-              Activity Log
-            </Link>
-          </div>
+        <>
+          {/* Mobile backdrop */}
+          <div 
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-xs sm:hidden"
+            onClick={() => setOpen(false)}
+          />
 
-          <div className="border-t border-slate-100 dark:border-slate-800 py-1">
-            <form action={logout}>
-              <button 
-                type="submit" 
-                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-left"
+          <div className="fixed inset-x-4 top-16 z-50 mx-auto max-w-xs sm:max-w-none sm:inset-x-auto sm:absolute sm:right-0 sm:top-auto sm:mt-2 sm:w-64 bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-1 animate-in fade-in zoom-in-95 duration-150 origin-top sm:origin-top-right flex flex-col">
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+              <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{profile?.full_name}</p>
+              <p className="text-xs text-slate-500 truncate">{profile?.email}</p>
+            </div>
+            
+            <div className="py-1">
+              <Link 
+                href="/profile" 
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
               >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
-            </form>
+                <UserCircle className="w-4 h-4 text-slate-400" />
+                Profile
+              </Link>
+              <Link 
+                href="/settings/account" 
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                <Settings className="w-4 h-4 text-slate-400" />
+                Settings
+              </Link>
+              <Link 
+                href="/activity" 
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                <Activity className="w-4 h-4 text-slate-400" />
+                Activity Log
+              </Link>
+            </div>
+
+            <div className="border-t border-slate-100 dark:border-slate-800 py-1">
+              <form action={logout}>
+                <button 
+                  type="submit" 
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-left"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

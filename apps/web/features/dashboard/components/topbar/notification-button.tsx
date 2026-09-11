@@ -155,14 +155,21 @@ export function NotificationButton() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl z-50 animate-in fade-in zoom-in duration-150 origin-top-right overflow-hidden flex flex-col max-h-[400px]">
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-[#0b1120]">
-            <div className="flex flex-col">
-              <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Notifications</h3>
-              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                Total: {notifications.length} • Unread: {unreadCount} • Read: {notifications.length - unreadCount}
-              </p>
-            </div>
+        <>
+          {/* Mobile backdrop to dismiss dropdown on tap */}
+          <div 
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-xs sm:hidden"
+            onClick={() => setOpen(false)}
+          />
+
+          <div className="fixed inset-x-3 top-16 z-50 mx-auto max-w-sm sm:max-w-none sm:inset-x-auto sm:absolute sm:right-0 sm:top-auto sm:mt-2 sm:w-80 bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-5rem)] sm:max-h-[420px] animate-in fade-in zoom-in-95 duration-150 origin-top sm:origin-top-right">
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-[#0b1120]">
+              <div className="flex flex-col">
+                <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Notifications</h3>
+                <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                  Total: {notifications.length} • Unread: {unreadCount} • Read: {notifications.length - unreadCount}
+                </p>
+              </div>
             <div className="flex gap-2 items-center">
               {unreadCount > 0 && (
                 <button 
@@ -248,7 +255,8 @@ export function NotificationButton() {
              </Link>
           </div>
         </div>
-      )}
+      </>
+    )}
       
       <ConfirmDialog 
         isOpen={confirmDialog.isOpen}
