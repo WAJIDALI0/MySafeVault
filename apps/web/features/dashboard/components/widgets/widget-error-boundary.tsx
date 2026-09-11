@@ -30,11 +30,11 @@ export class WidgetErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className={`w-full bg-[#0b1120] border border-red-900/50 rounded-xl ${this.props.h || 'min-h-[250px]'} flex flex-col items-center justify-center p-6 text-center`}>
-          <div className="w-10 h-10 rounded-full bg-red-900/20 flex items-center justify-center mb-3">
+        <div className={`w-full bg-white dark:bg-[#0b1120] border border-red-200 dark:border-red-900/50 shadow-sm rounded-xl ${this.props.h || 'min-h-[250px]'} flex flex-col items-center justify-center p-6 text-center`}>
+          <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-3">
             <AlertCircle className="w-5 h-5 text-red-500" />
           </div>
-          <h3 className="text-sm font-medium text-slate-200 mb-1">
+          <h3 className="text-sm font-medium text-slate-900 dark:text-slate-200 mb-1">
             {this.props.title ? `Failed to load ${this.props.title}` : 'Failed to load widget'}
           </h3>
           <p className="text-xs text-slate-500 max-w-[200px]">
@@ -42,7 +42,7 @@ export class WidgetErrorBoundary extends Component<Props, State> {
           </p>
           <button 
             onClick={() => this.setState({ hasError: false })}
-            className="mt-4 px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md transition-colors"
+            className="mt-4 px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent rounded-md transition-colors"
           >
             Retry
           </button>

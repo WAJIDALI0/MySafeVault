@@ -217,7 +217,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-[#0b1120] border-slate-800 text-white max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px] bg-white dark:bg-[#0b1120] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editMode ? "Edit Vault Item" : "Add Vault Item"}</DialogTitle>
         </DialogHeader>
@@ -231,7 +231,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
               value={type} 
               onChange={(e) => setType(e.target.value as VaultItemType)}
               disabled={editMode}
-              className="w-full bg-[#111827] border border-slate-800 rounded-md p-2 text-sm text-white disabled:opacity-50"
+              className="w-full bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-md p-2 text-sm text-slate-900 dark:text-white disabled:opacity-50 focus:bg-white dark:focus:bg-[#111827]"
             >
               <option value="PASSWORD">Password</option>
               <option value="DOCUMENT">Document</option>
@@ -250,7 +250,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
               onChange={(e) => setTitle(e.target.value)} 
               placeholder="e.g. Netflix, Passport..."
               required
-              className="bg-[#111827] border-slate-800"
+              className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
             />
           </div>
 
@@ -265,7 +265,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   value={username} 
                   onChange={(e) => setUsername(e.target.value)} 
                   placeholder="name@example.com"
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
               <div className="space-y-2 relative">
@@ -274,16 +274,16 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   <button 
                     type="button"
                     onClick={() => setShowGen(!showGen)}
-                    className="text-xs text-emerald-500 hover:text-emerald-400 flex items-center gap-1"
+                    className="text-xs text-emerald-600 dark:text-emerald-500 hover:text-emerald-500 dark:hover:text-emerald-400 flex items-center gap-1"
                   >
                     <RefreshCw className="w-3 h-3" /> Generator
                   </button>
                 </div>
                 
                 {showGen && (
-                  <div className="bg-[#111827] border border-slate-800 rounded-lg p-4 mb-4 space-y-4">
+                  <div className="bg-slate-50 dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-lg p-4 mb-4 space-y-4">
                     <div className="flex justify-between items-center">
-                      <Label className="text-xs text-slate-400">Length: {genLength}</Label>
+                      <Label className="text-xs text-slate-500 dark:text-slate-400">Length: {genLength}</Label>
                       <input 
                         type="range" min="8" max="64" 
                         value={genLength} onChange={(e) => setGenLength(parseInt(e.target.value))}
@@ -307,7 +307,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                     <Button 
                       type="button" 
                       onClick={() => setPassword(generateSecurePassword({ length: genLength, uppercase: genUpper, lowercase: genLower, numbers: genNum, symbols: genSym }))}
-                      className="w-full h-8 text-xs bg-slate-800 hover:bg-slate-700 text-white"
+                      className="w-full h-8 text-xs bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white"
                     >
                       Generate & Fill
                     </Button>
@@ -322,12 +322,12 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                     onChange={(e) => setPassword(e.target.value)} 
                     placeholder="••••••••"
                     required
-                    className="bg-[#111827] border-slate-800 pr-10"
+                    className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827] pr-10"
                   />
                   <button 
                     type="button" 
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -350,7 +350,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   value={url} 
                   onChange={(e) => setUrl(e.target.value)} 
                   placeholder="https://example.com"
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
               <div className="space-y-2">
@@ -360,7 +360,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   value={tags} 
                   onChange={(e) => setTags(e.target.value)} 
                   placeholder="e.g. streaming, work, finance"
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
             </>
@@ -371,28 +371,28 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
               <div className="space-y-2">
                 <Label>File Upload</Label>
                 {fileBase64 ? (
-                  <div className="border border-slate-700 bg-[#111827] rounded-md p-4 flex items-center justify-between">
+                  <div className="border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#111827] rounded-md p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="p-2 bg-[#0b1120] rounded-lg">
+                      <div className="p-2 bg-slate-200/60 dark:bg-[#0b1120] rounded-lg">
                         <UploadCloud className="w-4 h-4 text-emerald-500" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm text-slate-200 truncate">{fileName}</span>
+                        <span className="text-sm text-slate-800 dark:text-slate-200 truncate">{fileName}</span>
                         {fileSize && <span className="text-xs text-slate-500">{(fileSize / 1024 / 1024).toFixed(2)} MB</span>}
                       </div>
                     </div>
                     <button 
                       type="button" 
                       onClick={() => { setFileBase64(null); setFileName(null); setFileSize(null); }}
-                      className="p-1 text-slate-400 hover:text-red-400 transition-colors"
+                      className="p-1 text-slate-400 hover:text-red-500 transition-colors"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
-                  <div className="relative border border-dashed border-slate-700 hover:border-emerald-500/50 bg-[#111827] rounded-md p-8 flex flex-col items-center justify-center text-sm text-slate-400 transition-colors cursor-pointer group">
-                    <UploadCloud className="w-8 h-8 mb-3 text-slate-500 group-hover:text-emerald-500 transition-colors" />
-                    <span className="font-medium text-slate-300">Click to upload a file</span>
+                  <div className="relative border border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500/50 bg-slate-50 dark:bg-[#111827] rounded-md p-8 flex flex-col items-center justify-center text-sm text-slate-500 dark:text-slate-400 transition-colors cursor-pointer group">
+                    <UploadCloud className="w-8 h-8 mb-3 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                    <span className="font-medium text-slate-700 dark:text-slate-300">Click to upload a file</span>
                     <span className="text-xs mt-1">Images, PDFs, or Documents</span>
                     <input 
                       type="file" 
@@ -409,7 +409,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   type="date"
                   value={expiryDate} 
                   onChange={(e) => setExpiryDate(e.target.value)} 
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
             </>
@@ -424,7 +424,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   value={fullName} 
                   onChange={(e) => setFullName(e.target.value)} 
                   placeholder="John Doe"
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
               <div className="space-y-2">
@@ -434,7 +434,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   value={idNumber} 
                   onChange={(e) => setIdNumber(e.target.value)} 
                   placeholder="A12345678"
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
               <div className="space-y-2">
@@ -444,7 +444,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   type="date"
                   value={expiryDate} 
                   onChange={(e) => setExpiryDate(e.target.value)} 
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
             </>
@@ -461,7 +461,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   value={amount} 
                   onChange={(e) => setAmount(e.target.value)} 
                   placeholder="99.99"
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
               <div className="space-y-2">
@@ -471,7 +471,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   type="date"
                   value={purchaseDate} 
                   onChange={(e) => setPurchaseDate(e.target.value)} 
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
               <div className="space-y-2">
@@ -481,7 +481,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                   type="date"
                   value={expiryDate} 
                   onChange={(e) => setExpiryDate(e.target.value)} 
-                  className="bg-[#111827] border-slate-800"
+                  className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
                 />
               </div>
             </>
@@ -495,7 +495,7 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
                 value={category} 
                 onChange={(e) => setCategory(e.target.value)} 
                 placeholder="e.g. WiFi, Server Config, Network"
-                className="bg-[#111827] border-slate-800"
+                className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
               />
             </div>
           )}
@@ -507,12 +507,12 @@ export function AddVaultItemDialog({ children, defaultType = "PASSWORD", editMod
               value={description} 
               onChange={(e) => setDescription(e.target.value)} 
               placeholder="Add any additional details here..."
-              className="bg-[#111827] border-slate-800"
+              className="bg-slate-50 dark:bg-[#111827] border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#111827]"
             />
           </div>
           
           <DialogFooter className="pt-2">
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="hover:bg-slate-800 hover:text-white">
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white">
               Cancel
             </Button>
             <Button type="submit" disabled={isPending} className="bg-[#10b981] hover:bg-[#059669] text-white">

@@ -72,7 +72,7 @@ export function ChangePasswordDialog({ isOpen, onClose }: { isOpen: boolean; onC
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-50 dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 dark:text-white transition-all pr-10"
+                className="w-full px-4 py-2 bg-slate-50 dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 text-slate-900 dark:text-white transition-all pr-10"
                 placeholder="Enter new strong password"
               />
               <button
@@ -97,7 +97,7 @@ export function ChangePasswordDialog({ isOpen, onClose }: { isOpen: boolean; onC
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-50 dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 dark:text-white transition-all pr-10"
+                className="w-full px-4 py-2 bg-slate-50 dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 text-slate-900 dark:text-white transition-all pr-10"
                 placeholder="Confirm new password"
               />
               <button

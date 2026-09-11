@@ -1,54 +1,54 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ShieldCheck, Smartphone, EyeOff, LayoutDashboard, KeyRound, GlobeLock } from "lucide-react";
+import { ShieldCheck, Smartphone, Lock, LayoutDashboard, KeyRound, GlobeLock } from "lucide-react";
 
 const features = [
   {
-    title: "Zero-Knowledge Architecture",
-    description: "Your data is encrypted on your device using AES-256-GCM. We never see your master password or your unencrypted data.",
-    icon: EyeOff,
-    color: "text-emerald-400",
+    title: "AES-256-GCM Cryptographic Vault",
+    description: "Your sensitive passwords and documents are sealed using authenticated AES-256-GCM encryption with cryptographic integrity verification.",
+    icon: Lock,
+    color: "text-emerald-600 dark:text-emerald-400",
     bgColor: "bg-emerald-500/10",
     borderColor: "border-emerald-500/20"
   },
   {
-    title: "Smart Security Insights",
-    description: "Get real-time health scores for your vault. Automatically detect stale passwords and weak security configurations.",
+    title: "AI Security Posture Audits",
+    description: "Continuous real-time hygiene scoring. Automatically detect stale credentials, expiring documents, and weak authentication settings.",
     icon: ShieldCheck,
-    color: "text-indigo-400",
+    color: "text-indigo-600 dark:text-indigo-400",
     bgColor: "bg-indigo-500/10",
     borderColor: "border-indigo-500/20"
   },
   {
-    title: "Multi-Factor Authentication",
-    description: "Secure your account with TOTP authenticator apps. Advanced session tracking alerts you to any unusual login attempts.",
+    title: "Multi-Factor & Passkeys",
+    description: "Protect account access with WebAuthn biometrics, passkeys, and RFC 6238 TOTP authenticator app verification.",
     icon: Smartphone,
-    color: "text-rose-400",
+    color: "text-rose-600 dark:text-rose-400",
     bgColor: "bg-rose-500/10",
     borderColor: "border-rose-500/20"
   },
   {
-    title: "Beautiful & Intuitive",
-    description: "A dark-mode first design that feels premium and responsive across all devices, ensuring managing security isn't a chore.",
+    title: "Sleek Multi-Theme Interface",
+    description: "Engineered with a clean, high-contrast light mode and a deep OLED dark mode that seamlessly syncs with your system preferences.",
     icon: LayoutDashboard,
-    color: "text-amber-400",
+    color: "text-amber-600 dark:text-amber-400",
     bgColor: "bg-amber-500/10",
     borderColor: "border-amber-500/20"
   },
   {
-    title: "Universal Storage",
-    description: "Store more than just passwords. Securely save credit cards, identity documents, and encrypted secure notes.",
+    title: "Unified Universal Storage",
+    description: "Store more than just passwords. Protect national IDs, financial records, encrypted notes, warranties, and receipts in one place.",
     icon: KeyRound,
-    color: "text-blue-400",
+    color: "text-blue-600 dark:text-blue-400",
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-500/20"
   },
   {
-    title: "Cross-Device Syncing",
-    description: "Access your encrypted vault from anywhere. Your data syncs securely and instantly across all your devices.",
+    title: "Cross-Platform Access",
+    description: "Access your encrypted vault smoothly from any modern browser or device with real-time audit logs and session controls.",
     icon: GlobeLock,
-    color: "text-purple-400",
+    color: "text-purple-600 dark:text-purple-400",
     bgColor: "bg-purple-500/10",
     borderColor: "border-purple-500/20"
   }
@@ -56,8 +56,7 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-24 px-6 lg:px-12 bg-[#0B1120] relative">
-      
+    <section className="py-24 px-6 lg:px-12 bg-white dark:bg-[#0B1120] border-t border-slate-200/80 dark:border-slate-800/80 relative">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <motion.h2 
@@ -65,18 +64,18 @@ export function FeaturesSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-3xl md:text-5xl font-outfit font-bold text-white mb-4"
+            className="text-3xl md:text-5xl font-outfit font-bold text-slate-900 dark:text-white mb-4 tracking-tight"
           >
-            Built for paranoia. <br className="md:hidden" /> Designed for humans.
+            Built for security. Designed for clarity.
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-slate-400 text-lg max-w-2xl mx-auto"
+            className="text-slate-500 dark:text-slate-400 text-base md:text-lg max-w-2xl mx-auto"
           >
-            Enterprise-grade security meets a consumer-grade experience. MySafeVault brings advanced cryptographic protection to everyone.
+            Enterprise-grade cryptographic protection meets consumer-level usability. Everything you need to secure your digital life.
           </motion.p>
         </div>
 
@@ -88,13 +87,13 @@ export function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 p-8 rounded-2xl hover:bg-slate-800/50 transition-colors group"
+              className="bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 p-8 rounded-2xl hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md transition-all group"
             >
-              <div className={`w-14 h-14 rounded-xl ${feature.bgColor} ${feature.borderColor} border flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                <feature.icon className={`w-7 h-7 ${feature.color}`} />
+              <div className={`w-12 h-12 rounded-xl ${feature.bgColor} ${feature.borderColor} border flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                <feature.icon className={`w-6 h-6 ${feature.color}`} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3 font-outfit">{feature.title}</h3>
-              <p className="text-slate-400 leading-relaxed text-sm">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 font-outfit">{feature.title}</h3>
+              <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
                 {feature.description}
               </p>
             </motion.div>

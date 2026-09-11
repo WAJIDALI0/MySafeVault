@@ -8,6 +8,7 @@ import { ActiveSessionsCard } from '@/features/settings/components/active-sessio
 import { SentryTestCard } from '@/features/settings/components/sentry-test-card';
 import { EmailSecurityCard } from '@/features/settings/components/email-security-card';
 import { SecurityActivityList } from '@/features/settings/components/security-activity-list';
+import { PrivateVaultSecurityCard } from '@/features/settings/components/private-vault-security-card';
 import { prisma } from '@/lib/prisma/client';
 
 export const metadata = {
@@ -47,11 +48,11 @@ export default async function SecuritySettingsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 dark:border-slate-800">
         
         {/* Unified Premium Security Status Header */}
-        <div className="md:col-span-2 bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+        <div className="md:col-span-2 bg-white dark:bg-[#0b1120] rounded-2xl p-6 md:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-8 md:gap-12">
           {/* Circular Score */}
           <div className="relative w-40 h-40 shrink-0 flex items-center justify-center">
              <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                <circle cx="80" cy="80" r="70" fill="none" className="stroke-slate-200 dark:stroke-slate-800" strokeWidth="12" />
+                <circle cx="80" cy="80" r="70" fill="none" className="stroke-slate-100 dark:stroke-slate-800" strokeWidth="12" />
                 <circle 
                   cx="80" cy="80" r="70" fill="none" 
                   stroke="currentColor" 
@@ -83,35 +84,35 @@ export default async function SecuritySettingsPage() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               {isEmailVerified ? (
-                <div className="flex gap-3 bg-white dark:bg-slate-950/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 opacity-70">
-                  <Check className="w-5 h-5 text-green-500 shrink-0" />
-                  <span className="text-slate-600 dark:text-slate-300 font-medium">Email verified</span>
+                <div className="flex gap-3 bg-slate-50 dark:bg-slate-950/50 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/50 opacity-80">
+                  <Check className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">Email verified</span>
                 </div>
               ) : (
-                <div className="flex gap-3 bg-white dark:bg-slate-950/50 p-3 rounded-xl border border-amber-200 dark:border-amber-900/30">
+                <div className="flex gap-3 bg-amber-500/5 dark:bg-slate-950/50 p-3 rounded-xl border border-amber-200 dark:border-amber-900/30">
                   <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-                  <span className="text-slate-700 dark:text-slate-200 font-medium">Verify your email address</span>
+                  <span className="text-slate-800 dark:text-slate-200 font-medium">Verify your email address</span>
                 </div>
               )}
               
               {!isMfaEnabled && (
-                <div className="flex gap-3 bg-white dark:bg-slate-950/50 p-3 rounded-xl border border-amber-200 dark:border-amber-900/30">
+                <div className="flex gap-3 bg-amber-500/5 dark:bg-slate-950/50 p-3 rounded-xl border border-amber-200 dark:border-amber-900/30">
                   <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-                  <span className="text-slate-700 dark:text-slate-200 font-medium">Enable Two-Factor Authentication</span>
+                  <span className="text-slate-800 dark:text-slate-200 font-medium">Enable Two-Factor Authentication</span>
                 </div>
               )}
 
               {securityData.warnings.map((warning, i) => (
-                <div key={`warn-${i}`} className="flex gap-3 bg-white dark:bg-slate-950/50 p-3 rounded-xl border border-amber-200 dark:border-amber-900/30">
+                <div key={`warn-${i}`} className="flex gap-3 bg-amber-500/5 dark:bg-slate-950/50 p-3 rounded-xl border border-amber-200 dark:border-amber-900/30">
                   <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-                  <span className="text-slate-700 dark:text-slate-200 font-medium">{warning}</span>
+                  <span className="text-slate-800 dark:text-slate-200 font-medium">{warning}</span>
                 </div>
               ))}
               
               {securityData.score !== 100 && securityData.passes.map((pass, i) => (
-                <div key={`pass-${i}`} className="flex gap-3 bg-white dark:bg-slate-950/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 opacity-70">
-                  <Check className="w-5 h-5 text-green-500 shrink-0" />
-                  <span className="text-slate-600 dark:text-slate-300 font-medium">{pass}</span>
+                <div key={`pass-${i}`} className="flex gap-3 bg-slate-50 dark:bg-slate-950/50 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/50 opacity-80">
+                  <Check className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">{pass}</span>
                 </div>
               ))}
             </div>
@@ -121,6 +122,7 @@ export default async function SecuritySettingsPage() {
         {/* Account Security Cards */}
         <div className="md:col-span-2 mt-4 space-y-4">
           <h3 className="font-semibold text-slate-900 dark:text-white">Account Security</h3>
+          <PrivateVaultSecurityCard />
           <EmailSecurityCard 
             email={user.email || ''} 
             isVerified={isEmailVerified} 

@@ -8,3 +8,8 @@ build/
 .turbo/
 coverage/
 .DS_Store
+.vercel
+.env*
+certificates/
+*.tsbuildinfo
+

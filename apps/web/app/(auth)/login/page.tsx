@@ -1,42 +1,42 @@
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { LoginForm } from "@/features/auth/components/login-form";
-import { Shield, Lock, Smartphone } from "lucide-react";
+import { ShieldCheck, Lock, Smartphone } from "lucide-react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Login | MySafeVault",
-  description: "Login to access your encrypted vault and secure your digital life.",
+  description: "Sign in to access your encrypted vault and secure your digital life.",
   robots: { index: false, follow: false },
 };
 
 const features = [
   {
-    icon: <Shield className="w-6 h-6" />,
-    title: "End-to-end Encrypted",
-    description: "Your data is always secure",
+    icon: <ShieldCheck className="w-6 h-6 text-emerald-400" />,
+    title: "AES-256-GCM Security",
+    description: "Authenticated military-grade symmetric encryption for your credentials",
   },
   {
-    icon: <Lock className="w-6 h-6" />,
-    title: "Private by Design",
-    description: "We respect your privacy",
+    icon: <Lock className="w-6 h-6 text-emerald-400" />,
+    title: "Multi-Factor Protection",
+    description: "Hardware passkeys and TOTP authenticator verification",
   },
   {
-    icon: <Smartphone className="w-6 h-6" />,
-    title: "Access Anywhere",
-    description: "Sync across all your devices",
+    icon: <Smartphone className="w-6 h-6 text-emerald-400" />,
+    title: "Continuous Sync",
+    description: "Encrypted data synchronizes reliably across all devices",
   }
 ];
 
 export default function LoginPage() {
   return (
     <AuthLayout
-      title="Welcome back 👋"
-      description="Login to access your encrypted vault and secure your digital life."
+      title="Welcome Back"
+      description="Access your protected credentials, private notes, and digital identities."
       features={features}
     >
       <div className="mb-8 text-center lg:text-left">
-        <h2 className="text-2xl font-semibold mb-2">Login to your account</h2>
-        <p className="text-slate-500">Welcome back! Please enter your details.</p>
+        <h2 className="text-2xl font-bold font-outfit text-slate-900 dark:text-white mb-2">Welcome Back</h2>
+        <p className="text-slate-500 text-sm">Sign in to your account to access your encrypted vault.</p>
       </div>
       <LoginForm />
     </AuthLayout>

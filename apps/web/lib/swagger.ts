@@ -70,6 +70,43 @@ export const getApiDocs = async () => {
               '201': { description: 'Item created' }
             }
           }
+        },
+        '/api/vault/export': {
+          get: {
+            tags: ['Vault'],
+            summary: 'Export Vault Items for Client Encryption',
+            description: 'Returns authenticated user items ready for zero-knowledge .msvault client packaging.',
+            security: [{ BearerAuth: [] }],
+            responses: {
+              '200': { description: 'Items retrieved for export' },
+              '401': { description: 'Unauthorized' }
+            }
+          }
+        },
+        '/api/vault/import': {
+          post: {
+            tags: ['Vault'],
+            summary: 'Restore Vault Items from Decrypted Container',
+            description: 'Batch imports verified, decrypted items into the user cloud vault.',
+            security: [{ BearerAuth: [] }],
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      items: { type: 'array', items: { type: 'object' } }
+                    }
+                  }
+                }
+              }
+            },
+            responses: {
+              '200': { description: 'Items restored successfully' },
+              '400': { description: 'Invalid payload' }
+            }
+          }
         }
       },
       components: {

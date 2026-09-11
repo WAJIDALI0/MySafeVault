@@ -43,9 +43,9 @@ export function SecurityAssistant() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
       {isOpen ? (
-        <div className="w-[350px] sm:w-[400px] h-[500px] max-h-[80vh] bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className="w-[calc(100vw-2rem)] sm:w-[400px] h-[500px] max-h-[80vh] bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#10b981] to-emerald-600 p-4 flex items-center justify-between text-white">
             <div className="flex items-center gap-2">
@@ -118,10 +118,11 @@ export function SecurityAssistant() {
       ) : (
         <button 
           onClick={() => setIsOpen(true)}
-          className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-[#10b981] to-emerald-500 hover:to-emerald-400 text-white rounded-full shadow-lg shadow-emerald-500/30 hover:scale-105 transition-transform group relative"
+          className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-tr from-[#10b981] to-emerald-500 hover:to-emerald-400 text-white rounded-full shadow-lg shadow-emerald-500/30 hover:scale-105 transition-transform group relative cursor-pointer"
+          aria-label="Open security assistant"
         >
-          <Sparkles className="w-6 h-6 animate-pulse" />
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
+          <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
           </span>

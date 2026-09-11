@@ -6,7 +6,7 @@ import { LandingFooter } from "@/features/landing/components/footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#0B1120] text-slate-50 selection:bg-emerald-500/30">
+    <main className="min-h-screen bg-slate-50/50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-50 selection:bg-emerald-500/20">
       <LandingNavbar />
       <HeroSection />
       <FeaturesSection />
