@@ -5,8 +5,6 @@ import {
   encryptWithPassphrase,
   decryptWithPassphrase,
   generateRecoveryKey,
-  bufferToBase64,
-  base64ToBuffer,
   EncryptedPayload,
 } from "@/lib/crypto/client-vault-crypto";
 import {
@@ -16,324 +14,258 @@ import {
   clearLocalPrivateVault,
   StoredEncryptedItem,
 } from "@/lib/storage/local-vault-store";
+import {
+  getPrivateVaultCloudData,
+  savePrivateVaultCloudConfig,
+  savePrivateVaultItemCloud,
+  deletePrivateVaultItemCloud,
+  syncAllPrivateVaultCloud,
+  resetPrivateVaultCloud,
+  CloudStoredEncryptedItem,
+} from "../actions/private-vault-sync.actions";
+import {
+  VAULT_PASSCODE_HASH_KEY,
+  VAULT_AUTOLOCK_KEY,
+  VAULT_BIO_KEY,
+  VAULT_CREDENTIAL_KEY,
+  VAULT_RECOVERY_KEY,
+  VAULT_RECOVERY_ESCROW,
+  DEFAULT_AUTOLOCK_MINUTES,
+  isIpAddress,
+} from "../constants/private-vault.constants";
+import {
+  checkBiometricPlatformAvailability,
+  enrollBiometricCredential,
+  verifyBiometricChallenge,
+} from "../services/private-vault-biometrics.service";
+import {
+  decryptStoredPrivateItems,
+  reencryptAllPrivateItems,
+  VERIFICATION_TOKEN_STRING,
+} from "../services/private-vault-crypto.service";
+import { useVaultInactivityTimer } from "./use-vault-inactivity-timer";
+import { DecryptedPrivateItem } from "../types/private-vault.types";
 
-export interface DecryptedPrivateItem {
-  id: string;
-  title: string;
-  category: "password" | "document" | "note" | "identity" | "card";
-  data: Record<string, any>;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { DecryptedPrivateItem };
 
-const VAULT_PASSCODE_HASH_KEY = "msv_pv_hash";
-const VAULT_AUTOLOCK_KEY = "msv_pv_autolock";
-const VAULT_BIO_KEY = "msv_pv_bio_cached_key";
-const VAULT_CREDENTIAL_KEY = "msv_pv_credential_id";
-const VAULT_RECOVERY_KEY = "msv_pv_recovery_key";
-const VAULT_RECOVERY_ESCROW = "msv_pv_recovery_escrow";
-
-// Detect if hostname is an IPv4/IPv6 address (where W3C WebAuthn rpId must be omitted)
-const isIpAddress = (host: string) =>
-  /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(host) || host.includes(":");
-
-export function usePrivateVault(userId: string = "current_user") {
+export function usePrivateVault(initialUserId: string = "current_user") {
+  const [userId, setUserId] = useState<string>(initialUserId);
   const [isLocked, setIsLocked] = useState(true);
   const [isConfigured, setIsConfigured] = useState(false);
   const [isBiometricsAvailable, setIsBiometricsAvailable] = useState(false);
   const [recoveryKey, setRecoveryKey] = useState<string | null>(null);
   const [items, setItems] = useState<DecryptedPrivateItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [autoLockMinutes, setAutoLockMinutes] = useState<number>(5);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [autoLockMinutes, setAutoLockMinutes] = useState<number>(DEFAULT_AUTOLOCK_MINUTES);
 
   // Sensitive encryption key held purely in memory (never saved to localStorage)
   const activePassphraseRef = useRef<string | null>(null);
-  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check setup status, biometric availability, and recovery key
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    // Check if passcode is configured
-    const storedHash = localStorage.getItem(VAULT_PASSCODE_HASH_KEY);
-    setIsConfigured(Boolean(storedHash));
-
-    // Check recovery key
-    const storedRecKey = localStorage.getItem(VAULT_RECOVERY_KEY);
-    if (storedRecKey) {
-      setRecoveryKey(storedRecKey);
-    }
-
-    // Check auto lock preference
-    const storedAutoLock = localStorage.getItem(VAULT_AUTOLOCK_KEY);
-    if (storedAutoLock) {
-      setAutoLockMinutes(Number(storedAutoLock));
-    }
-
-    // Check platform biometric capability (Windows Hello / Touch ID / Face ID)
-    if (
-      window.PublicKeyCredential &&
-      typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === "function"
-    ) {
-      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
-        .then((available) => setIsBiometricsAvailable(available))
-        .catch(() => setIsBiometricsAvailable(false));
-    }
-
-    setIsLoading(false);
-  }, []);
-
-  // Strict zero-knowledge memory wipe when locked
+  // Zero-knowledge memory wipe on lock
   const lockVault = useCallback(() => {
     activePassphraseRef.current = null;
     setItems([]);
     setIsLocked(true);
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-      inactivityTimerRef.current = null;
-    }
   }, []);
 
-  // Inactivity and tab-switch auto-lock triggers
-  const resetInactivityTimer = useCallback(() => {
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-    }
+  // Hook for inactivity & tab switch auto-lock
+  useVaultInactivityTimer({
+    isLocked,
+    autoLockMinutes,
+    onLock: lockVault,
+  });
 
-    if (autoLockMinutes > 0 && !isLocked) {
-      inactivityTimerRef.current = setTimeout(() => {
-        lockVault();
-      }, autoLockMinutes * 60 * 1000);
-    }
-  }, [autoLockMinutes, isLocked, lockVault]);
+  // Decrypt items helper
+  const loadAndDecryptItems = useCallback(
+    async (passphrase: string, targetUserId: string = userId) => {
+      const rawRecords = await getLocalPrivateItems(targetUserId);
+      const decrypted = await decryptStoredPrivateItems(rawRecords, passphrase);
+      setItems(decrypted);
+    },
+    [userId]
+  );
 
+  // Initialize vault state & sync with cloud
   useEffect(() => {
-    if (isLocked) return;
+    let isMounted = true;
 
-    const handleUserActivity = () => {
-      resetInactivityTimer();
-    };
+    async function initializeVault() {
+      if (typeof window === "undefined") return;
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        lockVault();
+      try {
+        setIsSyncing(true);
+
+        // 1. Check biometric hardware
+        const biometricsAvailable = await checkBiometricPlatformAvailability();
+        if (isMounted) setIsBiometricsAvailable(biometricsAvailable);
+
+        // 2. Query cloud vault
+        const cloudRes = await getPrivateVaultCloudData();
+        const effectiveUserId = cloudRes.userId || userId;
+        if (cloudRes.userId && isMounted) setUserId(cloudRes.userId);
+
+        if (cloudRes.success && cloudRes.data?.isConfigured) {
+          const cloud = cloudRes.data;
+          setIsConfigured(true);
+
+          if (cloud.verificationPayload) {
+            localStorage.setItem(VAULT_PASSCODE_HASH_KEY, JSON.stringify(cloud.verificationPayload));
+          }
+          if (cloud.recoveryEscrow) {
+            localStorage.setItem(VAULT_RECOVERY_ESCROW, JSON.stringify(cloud.recoveryEscrow));
+          }
+          if (cloud.recoveryKey) {
+            localStorage.setItem(VAULT_RECOVERY_KEY, cloud.recoveryKey);
+            setRecoveryKey(cloud.recoveryKey);
+          }
+          if (cloud.autoLockMinutes) {
+            localStorage.setItem(VAULT_AUTOLOCK_KEY, cloud.autoLockMinutes.toString());
+            setAutoLockMinutes(cloud.autoLockMinutes);
+          }
+
+          // Cache cloud items to IndexedDB
+          if (cloud.items && cloud.items.length > 0) {
+            for (const item of cloud.items) {
+              await saveLocalPrivateItem({
+                id: item.id,
+                userId: effectiveUserId,
+                title: item.title,
+                category: item.category,
+                encryptedPayload: item.encryptedPayload,
+                salt: item.salt,
+                iv: item.iv,
+                version: item.version,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+              });
+            }
+          }
+        } else {
+          // Fallback to local storage
+          const localHash = localStorage.getItem(VAULT_PASSCODE_HASH_KEY);
+          if (localHash) {
+            setIsConfigured(true);
+            const localRecKey = localStorage.getItem(VAULT_RECOVERY_KEY);
+            if (localRecKey) setRecoveryKey(localRecKey);
+
+            const localEscrow = localStorage.getItem(VAULT_RECOVERY_ESCROW);
+            const localAutoLock = localStorage.getItem(VAULT_AUTOLOCK_KEY);
+
+            // Auto-migrate local records to cloud
+            if (cloudRes.userId) {
+              try {
+                const parsedHash = JSON.parse(localHash);
+                const parsedEscrow = localEscrow ? JSON.parse(localEscrow) : null;
+                const localItems = await getLocalPrivateItems(effectiveUserId);
+
+                await savePrivateVaultCloudConfig({
+                  verificationPayload: parsedHash,
+                  recoveryEscrow: parsedEscrow,
+                  recoveryKey: localRecKey,
+                  autoLockMinutes: localAutoLock ? Number(localAutoLock) : DEFAULT_AUTOLOCK_MINUTES,
+                });
+
+                if (localItems.length > 0) {
+                  const cloudItems: CloudStoredEncryptedItem[] = localItems.map((it) => ({
+                    id: it.id,
+                    userId: effectiveUserId,
+                    title: it.title,
+                    category: it.category,
+                    encryptedPayload: it.encryptedPayload,
+                    salt: it.salt,
+                    iv: it.iv,
+                    version: it.version,
+                    createdAt: it.createdAt,
+                    updatedAt: it.updatedAt,
+                  }));
+                  await syncAllPrivateVaultCloud({ items: cloudItems });
+                }
+              } catch (migrateErr) {
+                console.warn("Local-to-cloud migration notice:", migrateErr);
+              }
+            }
+          } else {
+            setIsConfigured(false);
+          }
+        }
+
+        const storedAutoLock = localStorage.getItem(VAULT_AUTOLOCK_KEY);
+        if (storedAutoLock) {
+          setAutoLockMinutes(Number(storedAutoLock));
+        }
+      } catch (err) {
+        console.error("Vault initialization error:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+          setIsSyncing(false);
+        }
       }
-    };
+    }
 
-    window.addEventListener("pointerdown", handleUserActivity);
-    window.addEventListener("keydown", handleUserActivity);
-    window.addEventListener("scroll", handleUserActivity);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    resetInactivityTimer();
+    initializeVault();
 
     return () => {
-      window.removeEventListener("pointerdown", handleUserActivity);
-      window.removeEventListener("keydown", handleUserActivity);
-      window.removeEventListener("scroll", handleUserActivity);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      if (inactivityTimerRef.current) {
-        clearTimeout(inactivityTimerRef.current);
-      }
+      isMounted = false;
     };
-  }, [isLocked, resetInactivityTimer, lockVault]);
+  }, []);
 
-  // Load and decrypt items from IndexedDB
-  const loadAndDecryptItems = async (passphrase: string) => {
-    const rawRecords = await getLocalPrivateItems(userId);
-    const decryptedList: DecryptedPrivateItem[] = [];
-
-    for (const record of rawRecords) {
-      try {
-        const payload: EncryptedPayload = {
-          salt: record.salt,
-          iv: record.iv,
-          ciphertext: record.encryptedPayload,
-          version: record.version,
-        };
-
-        const decryptedJson = await decryptWithPassphrase(payload, passphrase);
-        const parsed = JSON.parse(decryptedJson);
-
-        decryptedList.push({
-          id: record.id,
-          title: record.title,
-          category: (record.category as any) || "password",
-          data: parsed,
-          createdAt: record.createdAt,
-          updatedAt: record.updatedAt,
-        });
-      } catch (err) {
-        console.error(`Failed to decrypt private item ${record.id}:`, err);
-      }
-    }
-
-    setItems(decryptedList);
-  };
-
-  // Perform hardware biometric challenge or registration
+  // Biometric challenge
   const performBiometricVerification = async (): Promise<boolean> => {
-    if (typeof window === "undefined" || !window.PublicKeyCredential) {
-      throw new Error("Biometric authenticator is not supported on this browser.");
-    }
-
-    const host = window.location.hostname;
-    const isIp = isIpAddress(host);
-
-    try {
-      const challenge = new Uint8Array(32);
-      window.crypto.getRandomValues(challenge);
-
-      const storedCredentialId = localStorage.getItem(VAULT_CREDENTIAL_KEY);
-
-      // If not yet enrolled on this device, enroll platform authenticator
-      if (!storedCredentialId && navigator.credentials?.create) {
-        const userIdBytes = new TextEncoder().encode(userId);
-        const cred = (await navigator.credentials.create({
-          publicKey: {
-            challenge,
-            rp: {
-              name: "MySafeVault",
-              ...(isIp ? {} : { id: host }),
-            },
-            user: {
-              id: userIdBytes,
-              name: "Vault User",
-              displayName: "Vault User",
-            },
-            pubKeyCredParams: [
-              { alg: -7, type: "public-key" },
-              { alg: -257, type: "public-key" },
-            ],
-            authenticatorSelection: {
-              authenticatorAttachment: "platform",
-              userVerification: "required",
-              residentKey: "preferred",
-            },
-            timeout: 60000,
-          },
-        })) as any;
-
-        if (cred?.rawId) {
-          const credIdBase64 = bufferToBase64(cred.rawId);
-          localStorage.setItem(VAULT_CREDENTIAL_KEY, credIdBase64);
-        }
-        return true;
-      }
-
-      // Perform assertion challenge with enrolled credential
-      const publicKeyOpts: any = {
-        challenge,
-        timeout: 60000,
-        userVerification: "required",
-        ...(isIp ? {} : { rpId: host }),
-        ...(storedCredentialId
-          ? {
-              allowCredentials: [
-                {
-                  id: base64ToBuffer(storedCredentialId),
-                  type: "public-key",
-                  transports: ["internal"],
-                },
-              ],
-            }
-          : {}),
-      };
-
-      const assertion = await navigator.credentials.get({
-        publicKey: publicKeyOpts,
-      });
-
-
-      return Boolean(assertion);
-    } catch (err: any) {
-      if (err?.name === "NotAllowedError" || err?.message?.includes("cancelled")) {
-        // If on an IP address, Android Chromium throws NotAllowedError because RFC 1034 requires a domain string
-        if (isIp) {
-          console.warn("Chromium WebAuthn IP restriction encountered:", err);
-          throw new Error(
-            "Android Chrome restricts hardware WebAuthn on raw IP addresses. Please use your master passcode or connect via a hostname (e.g. localhost or custom domain)."
-          );
-        }
-        throw new Error("Biometric verification was cancelled.");
-      }
-      throw new Error(err?.message || "Biometric sensor verification failed.");
-    }
+    return await verifyBiometricChallenge(userId);
   };
 
-  // Configure new master passcode for Private Vault
+  // Configure initial master passcode
   const setupPasscode = async (passcode: string) => {
     if (passcode.length < 4) {
       throw new Error("Passcode must be at least 4 digits.");
     }
 
-    // Encrypt verification token with passcode to verify future unlocks
-    const verificationPayload = await encryptWithPassphrase("VALID_PV_UNLOCK", passcode);
+    const verificationPayload = await encryptWithPassphrase(VERIFICATION_TOKEN_STRING, passcode);
     localStorage.setItem(VAULT_PASSCODE_HASH_KEY, JSON.stringify(verificationPayload));
 
-    // Generate Emergency Recovery Key (16 chars)
     const recKey = generateRecoveryKey();
     localStorage.setItem(VAULT_RECOVERY_KEY, recKey);
     const recoveryEscrow = await encryptWithPassphrase(passcode, recKey);
     localStorage.setItem(VAULT_RECOVERY_ESCROW, JSON.stringify(recoveryEscrow));
     setRecoveryKey(recKey);
 
-    // Bind biometric key so platform fingerprint unlock works immediately
     localStorage.setItem(VAULT_BIO_KEY, passcode);
     sessionStorage.setItem(VAULT_BIO_KEY, passcode);
     setIsConfigured(true);
 
-    // Register platform biometric credential if available
-    if (isBiometricsAvailable && typeof navigator !== "undefined" && navigator.credentials?.create) {
-      try {
-        const host = window.location.hostname;
-        const isIp = isIpAddress(host);
-        const challenge = new Uint8Array(32);
-        window.crypto.getRandomValues(challenge);
-        const userIdBytes = new TextEncoder().encode(userId);
+    // Sync config to cloud
+    savePrivateVaultCloudConfig({
+      verificationPayload,
+      recoveryEscrow,
+      recoveryKey: recKey,
+      autoLockMinutes,
+    }).catch((err) => console.warn("Cloud config sync error:", err));
 
-        const cred = (await navigator.credentials.create({
-          publicKey: {
-            challenge,
-            rp: {
-              name: "MySafeVault",
-              ...(isIp ? {} : { id: host }),
-            },
-            user: {
-              id: userIdBytes,
-              name: "Vault User",
-              displayName: "Vault User",
-            },
-            pubKeyCredParams: [
-              { alg: -7, type: "public-key" },
-              { alg: -257, type: "public-key" },
-            ],
-            authenticatorSelection: {
-              authenticatorAttachment: "platform",
-              userVerification: "required",
-              residentKey: "preferred",
-            },
-            timeout: 60000,
-          },
-        })) as any;
+    // Enroll platform authenticator
+    if (isBiometricsAvailable) {
+      enrollBiometricCredential(userId).catch(() => {});
+    }
 
-        if (cred?.rawId) {
-          localStorage.setItem(VAULT_CREDENTIAL_KEY, bufferToBase64(cred.rawId));
-        }
-      } catch (bioErr) {
-        console.warn("Biometric enrollment skipped or dismissed:", bioErr);
+    activePassphraseRef.current = passcode;
+    setIsLocked(false);
+    await loadAndDecryptItems(passcode, userId);
+  };
+
+  // Unlock with passcode
+  const unlockWithPasscode = async (passcode: string) => {
+    let storedHash = localStorage.getItem(VAULT_PASSCODE_HASH_KEY);
+
+    if (!storedHash) {
+      const cloudRes = await getPrivateVaultCloudData();
+      if (cloudRes.success && cloudRes.data?.verificationPayload) {
+        storedHash = JSON.stringify(cloudRes.data.verificationPayload);
+        localStorage.setItem(VAULT_PASSCODE_HASH_KEY, storedHash);
+        if (cloudRes.userId) setUserId(cloudRes.userId);
       }
     }
 
-    // Unlock with the new passcode
-    activePassphraseRef.current = passcode;
-    setIsLocked(false);
-    await loadAndDecryptItems(passcode);
-  };
-
-  // Unlock with Master Passcode
-  const unlockWithPasscode = async (passcode: string) => {
-    const storedHash = localStorage.getItem(VAULT_PASSCODE_HASH_KEY);
     if (!storedHash) {
       throw new Error("Private vault is not configured yet.");
     }
@@ -341,23 +273,51 @@ export function usePrivateVault(userId: string = "current_user") {
     try {
       const verificationPayload: EncryptedPayload = JSON.parse(storedHash);
       const verified = await decryptWithPassphrase(verificationPayload, passcode);
-      if (verified !== "VALID_PV_UNLOCK") {
+      if (verified !== VERIFICATION_TOKEN_STRING) {
         throw new Error("Invalid passcode.");
       }
 
-      // Refresh cached biometric key
       localStorage.setItem(VAULT_BIO_KEY, passcode);
       sessionStorage.setItem(VAULT_BIO_KEY, passcode);
-
       activePassphraseRef.current = passcode;
+
+      // Sync latest cloud items
+      try {
+        setIsSyncing(true);
+        const cloudRes = await getPrivateVaultCloudData();
+        const effectiveUserId = cloudRes.userId || userId;
+        if (cloudRes.userId) setUserId(cloudRes.userId);
+
+        if (cloudRes.success && cloudRes.data?.items) {
+          for (const item of cloudRes.data.items) {
+            await saveLocalPrivateItem({
+              id: item.id,
+              userId: effectiveUserId,
+              title: item.title,
+              category: item.category,
+              encryptedPayload: item.encryptedPayload,
+              salt: item.salt,
+              iv: item.iv,
+              version: item.version,
+              createdAt: item.createdAt,
+              updatedAt: item.updatedAt,
+            });
+          }
+        }
+      } catch (cloudErr) {
+        console.warn("Cached/offline unlock active:", cloudErr);
+      } finally {
+        setIsSyncing(false);
+      }
+
       setIsLocked(false);
-      await loadAndDecryptItems(passcode);
-    } catch (err) {
+      await loadAndDecryptItems(passcode, userId);
+    } catch {
       throw new Error("Incorrect passcode. Access denied.");
     }
   };
 
-  // WebAuthn biometric unlock challenge
+  // Unlock with biometrics
   const unlockWithBiometrics = async () => {
     if (!isBiometricsAvailable) {
       throw new Error("Biometric authenticator is not available on this device.");
@@ -366,18 +326,15 @@ export function usePrivateVault(userId: string = "current_user") {
     const storedPasscode =
       localStorage.getItem(VAULT_BIO_KEY) || sessionStorage.getItem(VAULT_BIO_KEY);
     if (!storedPasscode) {
-      throw new Error("Please enter your master passcode once to bind fingerprint biometrics.");
+      throw new Error("Please enter your master passcode once on this device to bind biometrics.");
     }
 
     try {
       await performBiometricVerification();
       await unlockWithPasscode(storedPasscode);
     } catch (err: any) {
-      // If WebAuthn fails specifically due to raw IP domain restriction in Android Chrome,
-      // allow fallback to the bound session key so mobile IP testing functions seamlessly
       const host = typeof window !== "undefined" ? window.location.hostname : "";
       if (isIpAddress(host) && storedPasscode) {
-        console.warn("WebAuthn IP constraint bypassed: unlocking with device bound key.");
         await unlockWithPasscode(storedPasscode);
         return;
       }
@@ -385,84 +342,66 @@ export function usePrivateVault(userId: string = "current_user") {
     }
   };
 
-  // Reset Master Passcode using Fingerprint verification
+  // Reset passcode using biometrics
   const resetPasscodeWithBiometrics = async (newPasscode: string) => {
     if (newPasscode.length < 4) {
-      throw new Error("New passcode must be at least 4 digits or characters.");
+      throw new Error("New passcode must be at least 4 digits.");
     }
 
     const boundPasscode =
       localStorage.getItem(VAULT_BIO_KEY) || sessionStorage.getItem(VAULT_BIO_KEY);
-
     if (!boundPasscode) {
-      throw new Error(
-        "No previous biometric session found on this device. Please use your Emergency Recovery Key to reset."
-      );
+      throw new Error("No previous biometric session found. Please use your Recovery Key.");
     }
 
-    // Challenge sensor
     try {
       await performBiometricVerification();
     } catch (err: any) {
       const host = typeof window !== "undefined" ? window.location.hostname : "";
-      if (!isIpAddress(host)) {
-        throw err;
-      }
+      if (!isIpAddress(host)) throw err;
     }
 
-    // Re-encrypt all items with new passcode
-    const rawRecords = await getLocalPrivateItems(userId);
-    for (const record of rawRecords) {
-      try {
-        const payload: EncryptedPayload = {
-          salt: record.salt,
-          iv: record.iv,
-          ciphertext: record.encryptedPayload,
-          version: record.version,
-        };
-        const decryptedJson = await decryptWithPassphrase(payload, boundPasscode);
-        const reEncrypted = await encryptWithPassphrase(decryptedJson, newPasscode);
+    setIsSyncing(true);
 
-        const updatedRecord: StoredEncryptedItem = {
-          ...record,
-          encryptedPayload: reEncrypted.ciphertext,
-          salt: reEncrypted.salt,
-          iv: reEncrypted.iv,
-          updatedAt: new Date().toISOString(),
-        };
-        await saveLocalPrivateItem(updatedRecord);
-      } catch (err) {
-        console.error(`Re-encryption error for item ${record.id}:`, err);
-      }
-    }
+    // Re-encrypt items
+    const updatedCloudItems = await reencryptAllPrivateItems(userId, boundPasscode, newPasscode);
 
-    // Update verification hash
-    const verificationPayload = await encryptWithPassphrase("VALID_PV_UNLOCK", newPasscode);
+    const verificationPayload = await encryptWithPassphrase(VERIFICATION_TOKEN_STRING, newPasscode);
     localStorage.setItem(VAULT_PASSCODE_HASH_KEY, JSON.stringify(verificationPayload));
 
-    // Update recovery escrow if recovery key exists
+    let newEscrow: any = null;
     const existingRecKey = localStorage.getItem(VAULT_RECOVERY_KEY);
     if (existingRecKey) {
-      const newEscrow = await encryptWithPassphrase(newPasscode, existingRecKey);
+      newEscrow = await encryptWithPassphrase(newPasscode, existingRecKey);
       localStorage.setItem(VAULT_RECOVERY_ESCROW, JSON.stringify(newEscrow));
     }
 
-    // Refresh cached biometric key
     localStorage.setItem(VAULT_BIO_KEY, newPasscode);
     sessionStorage.setItem(VAULT_BIO_KEY, newPasscode);
 
+    try {
+      await syncAllPrivateVaultCloud({
+        items: updatedCloudItems,
+        verificationPayload,
+        recoveryEscrow: newEscrow,
+        recoveryKey: existingRecKey,
+        autoLockMinutes,
+      });
+    } catch (syncErr) {
+      console.warn("Cloud re-encrypt sync warning:", syncErr);
+    } finally {
+      setIsSyncing(false);
+    }
+
     activePassphraseRef.current = newPasscode;
     setIsLocked(false);
-    await loadAndDecryptItems(newPasscode);
+    await loadAndDecryptItems(newPasscode, userId);
   };
 
-  // Reset Master Passcode using Emergency Recovery Key
-  const resetPasscodeWithRecoveryKey = async (
-    recoveryKeyInput: string,
-    newPasscode: string
-  ) => {
+  // Reset passcode using Emergency Recovery Key
+  const resetPasscodeWithRecoveryKey = async (recoveryKeyInput: string, newPasscode: string) => {
     if (newPasscode.length < 4) {
-      throw new Error("New passcode must be at least 4 digits or characters.");
+      throw new Error("New passcode must be at least 4 digits.");
     }
 
     const cleanKey = recoveryKeyInput.trim().toUpperCase();
@@ -470,86 +409,70 @@ export function usePrivateVault(userId: string = "current_user") {
     const storedRecKey = localStorage.getItem(VAULT_RECOVERY_KEY);
 
     let oldPasscode: string | null = null;
-
     if (escrowRaw) {
       try {
         const payload: EncryptedPayload = JSON.parse(escrowRaw);
         oldPasscode = await decryptWithPassphrase(payload, cleanKey);
       } catch {
-        // failed escrow decrypt
+        // Escrow failed
       }
     }
 
-    // Fallback: If cleanKey matches stored key and we have bound key
     if (!oldPasscode && storedRecKey && storedRecKey.toUpperCase() === cleanKey) {
-      oldPasscode =
-        localStorage.getItem(VAULT_BIO_KEY) || sessionStorage.getItem(VAULT_BIO_KEY);
+      oldPasscode = localStorage.getItem(VAULT_BIO_KEY) || sessionStorage.getItem(VAULT_BIO_KEY);
     }
 
     if (!oldPasscode) {
-      throw new Error("Invalid emergency recovery key. Unable to decrypt vault.");
+      throw new Error("Invalid recovery key. Unable to decrypt vault.");
     }
 
-    // Re-encrypt all items
-    const rawRecords = await getLocalPrivateItems(userId);
-    for (const record of rawRecords) {
-      try {
-        const payload: EncryptedPayload = {
-          salt: record.salt,
-          iv: record.iv,
-          ciphertext: record.encryptedPayload,
-          version: record.version,
-        };
-        const decryptedJson = await decryptWithPassphrase(payload, oldPasscode);
-        const reEncrypted = await encryptWithPassphrase(decryptedJson, newPasscode);
+    setIsSyncing(true);
 
-        const updatedRecord: StoredEncryptedItem = {
-          ...record,
-          encryptedPayload: reEncrypted.ciphertext,
-          salt: reEncrypted.salt,
-          iv: reEncrypted.iv,
-          updatedAt: new Date().toISOString(),
-        };
-        await saveLocalPrivateItem(updatedRecord);
-      } catch (err) {
-        console.error(`Re-encryption error for item ${record.id}:`, err);
-      }
-    }
+    const updatedCloudItems = await reencryptAllPrivateItems(userId, oldPasscode, newPasscode);
 
-    // Update verification hash
-    const verificationPayload = await encryptWithPassphrase("VALID_PV_UNLOCK", newPasscode);
+    const verificationPayload = await encryptWithPassphrase(VERIFICATION_TOKEN_STRING, newPasscode);
     localStorage.setItem(VAULT_PASSCODE_HASH_KEY, JSON.stringify(verificationPayload));
 
-    // Re-encrypt new passcode with the recovery key
     const newEscrow = await encryptWithPassphrase(newPasscode, cleanKey);
     localStorage.setItem(VAULT_RECOVERY_ESCROW, JSON.stringify(newEscrow));
     localStorage.setItem(VAULT_RECOVERY_KEY, cleanKey);
     setRecoveryKey(cleanKey);
 
-    // Update cached biometric key
     localStorage.setItem(VAULT_BIO_KEY, newPasscode);
     sessionStorage.setItem(VAULT_BIO_KEY, newPasscode);
 
+    try {
+      await syncAllPrivateVaultCloud({
+        items: updatedCloudItems,
+        verificationPayload,
+        recoveryEscrow: newEscrow,
+        recoveryKey: cleanKey,
+        autoLockMinutes,
+      });
+    } catch (syncErr) {
+      console.warn("Cloud recovery sync warning:", syncErr);
+    } finally {
+      setIsSyncing(false);
+    }
+
     activePassphraseRef.current = newPasscode;
     setIsLocked(false);
-    await loadAndDecryptItems(newPasscode);
+    await loadAndDecryptItems(newPasscode, userId);
   };
 
-  // Add a new private encrypted item
+  // Add private item
   const addPrivateItem = async (
     title: string,
     category: DecryptedPrivateItem["category"],
     data: Record<string, any>
   ) => {
     const passphrase = activePassphraseRef.current;
-    if (!passphrase || isLocked) {
-      throw new Error("Vault is locked. Cannot add item.");
-    }
+    if (!passphrase || isLocked) throw new Error("Vault is locked.");
 
     const id = crypto.randomUUID ? crypto.randomUUID() : `item_${Date.now()}`;
     const encrypted = await encryptWithPassphrase(JSON.stringify(data), passphrase);
-
     const now = new Date().toISOString();
+
     const storedItem: StoredEncryptedItem = {
       id,
       userId,
@@ -575,9 +498,22 @@ export function usePrivateVault(userId: string = "current_user") {
     };
 
     setItems((prev) => [newItem, ...prev]);
+
+    savePrivateVaultItemCloud({
+      id: storedItem.id,
+      userId,
+      title: storedItem.title,
+      category: storedItem.category,
+      encryptedPayload: storedItem.encryptedPayload,
+      salt: storedItem.salt,
+      iv: storedItem.iv,
+      version: storedItem.version,
+      createdAt: storedItem.createdAt,
+      updatedAt: storedItem.updatedAt,
+    }).catch((err) => console.warn("Background cloud save warning:", err));
   };
 
-  // Update existing private encrypted item
+  // Update private item
   const updatePrivateItem = async (
     id: string,
     title: string,
@@ -585,9 +521,7 @@ export function usePrivateVault(userId: string = "current_user") {
     data: Record<string, any>
   ) => {
     const passphrase = activePassphraseRef.current;
-    if (!passphrase || isLocked) {
-      throw new Error("Vault is locked. Cannot update item.");
-    }
+    if (!passphrase || isLocked) throw new Error("Vault is locked.");
 
     const encrypted = await encryptWithPassphrase(JSON.stringify(data), passphrase);
     const now = new Date().toISOString();
@@ -619,21 +553,92 @@ export function usePrivateVault(userId: string = "current_user") {
     };
 
     setItems((prev) => prev.map((it) => (it.id === id ? updatedItem : it)));
+
+    savePrivateVaultItemCloud({
+      id: storedItem.id,
+      userId,
+      title: storedItem.title,
+      category: storedItem.category,
+      encryptedPayload: storedItem.encryptedPayload,
+      salt: storedItem.salt,
+      iv: storedItem.iv,
+      version: storedItem.version,
+      createdAt: storedItem.createdAt,
+      updatedAt: storedItem.updatedAt,
+    }).catch((err) => console.warn("Background cloud update warning:", err));
   };
 
-  // Remove private item
+  // Delete private item
   const deleteItem = async (id: string) => {
     await deleteLocalPrivateItem(userId, id);
     setItems((prev) => prev.filter((item) => item.id !== id));
+    deletePrivateVaultItemCloud(id).catch((err) =>
+      console.warn("Background cloud delete warning:", err)
+    );
   };
 
-  // Change auto-lock duration
+  // Cloud sync helper
+  const syncWithCloud = async () => {
+    if (isSyncing) return;
+    try {
+      setIsSyncing(true);
+      const cloudRes = await getPrivateVaultCloudData();
+      if (cloudRes.success && cloudRes.data) {
+        const cloud = cloudRes.data;
+        if (cloud.isConfigured) {
+          setIsConfigured(true);
+          if (cloud.verificationPayload) {
+            localStorage.setItem(VAULT_PASSCODE_HASH_KEY, JSON.stringify(cloud.verificationPayload));
+          }
+          if (cloud.recoveryEscrow) {
+            localStorage.setItem(VAULT_RECOVERY_ESCROW, JSON.stringify(cloud.recoveryEscrow));
+          }
+          if (cloud.recoveryKey) {
+            localStorage.setItem(VAULT_RECOVERY_KEY, cloud.recoveryKey);
+            setRecoveryKey(cloud.recoveryKey);
+          }
+        }
+
+        const effectiveUserId = cloudRes.userId || userId;
+        if (cloud.items) {
+          for (const item of cloud.items) {
+            await saveLocalPrivateItem({
+              id: item.id,
+              userId: effectiveUserId,
+              title: item.title,
+              category: item.category,
+              encryptedPayload: item.encryptedPayload,
+              salt: item.salt,
+              iv: item.iv,
+              version: item.version,
+              createdAt: item.createdAt,
+              updatedAt: item.updatedAt,
+            });
+          }
+        }
+
+        if (!isLocked && activePassphraseRef.current) {
+          await loadAndDecryptItems(activePassphraseRef.current, effectiveUserId);
+        }
+      }
+    } catch (err) {
+      console.error("Cloud sync failed:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Update autolock preference
   const updateAutoLockMinutes = (mins: number) => {
     setAutoLockMinutes(mins);
     localStorage.setItem(VAULT_AUTOLOCK_KEY, mins.toString());
+    savePrivateVaultCloudConfig({
+      verificationPayload: JSON.parse(localStorage.getItem(VAULT_PASSCODE_HASH_KEY) || "{}"),
+      autoLockMinutes: mins,
+    }).catch(() => {});
   };
 
-  // Wipe all local private data
+  // Wipe private vault
   const resetPrivateVault = async () => {
     await clearLocalPrivateVault(userId);
     localStorage.removeItem(VAULT_PASSCODE_HASH_KEY);
@@ -645,6 +650,8 @@ export function usePrivateVault(userId: string = "current_user") {
     sessionStorage.removeItem(VAULT_BIO_KEY);
     setRecoveryKey(null);
     setIsConfigured(false);
+
+    resetPrivateVaultCloud().catch((err) => console.warn("Cloud reset warning:", err));
     lockVault();
   };
 
@@ -654,6 +661,7 @@ export function usePrivateVault(userId: string = "current_user") {
     isBiometricsAvailable,
     recoveryKey,
     isLoading,
+    isSyncing,
     items,
     autoLockMinutes,
     lockVault,
@@ -666,8 +674,8 @@ export function usePrivateVault(userId: string = "current_user") {
     addPrivateItem,
     updatePrivateItem,
     deleteItem,
+    syncWithCloud,
     updateAutoLockMinutes,
     resetPrivateVault,
   };
 }
-
